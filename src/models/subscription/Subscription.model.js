@@ -61,6 +61,7 @@ const SubscriptionSchema = new mongoose.Schema(
             type: Boolean,
             default: false
         },
+        
         using: {
             type: Boolean,
             default: false

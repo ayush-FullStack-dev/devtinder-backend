@@ -1,0 +1,6 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.wordWrap": "on",
+  "editor.formatOnSave": true,
+  "files.autoSave": "afterDelay"
+}

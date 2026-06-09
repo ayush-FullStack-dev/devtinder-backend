@@ -1,5 +1,5 @@
 export const updateOrCreateOption = {
-    upsert: true,
-    setDefaultsOnInsert: true,
-    new: true
+  upsert: true,
+  setDefaultsOnInsert: true,
+  returnDocument: "after",
 };
