@@ -5,7 +5,7 @@ export const refundWebhookSchema = Joi.object({
     .valid(
       "REFUND_STATUS_WEBHOOK",
       "AUTO_REFUND_STATUS_WEBHOOK",
-      "SUBSCRIPTION_REFUND_STATUS"
+      "SUBSCRIPTION_REFUND_STATUS",
     )
     .required(),
 
@@ -23,14 +23,18 @@ export const refundWebhookSchema = Joi.object({
             order_id: Joi.string().required(),
             refund_amount: Joi.number().required(),
             refund_currency: Joi.string().required(),
-            refund_status: Joi.string().required()
-          }).required(),
+            refund_status: Joi.string().required(),
+          })
+            .unknown(true)
+            .required(),
 
           terminalDetails: Joi.object({
             cf_terminal_id: Joi.number().required(),
-            terminal_phone: Joi.string().required()
-          }).required()
-        }).required()
+            terminal_phone: Joi.string().required(),
+          })
+            .unknown(true)
+            .required(),
+        }).required(),
       },
 
       {
@@ -42,14 +46,18 @@ export const refundWebhookSchema = Joi.object({
             order_id: Joi.string().required(),
             refund_amount: Joi.number().required(),
             refund_currency: Joi.string().required(),
-            refund_status: Joi.string().required()
-          }).required(),
+            refund_status: Joi.string().required(),
+          })
+            .unknown(true) // allow additional Cashfree fields
+            .required(),
 
           terminalDetails: Joi.object({
             cf_terminal_id: Joi.number().required(),
-            terminal_phone: Joi.string().required()
-          }).required()
-        }).required()
+            terminal_phone: Joi.string().required(),
+          })
+            .unknown(true)
+            .required(),
+        }).required(),
       },
 
       {
@@ -62,16 +70,21 @@ export const refundWebhookSchema = Joi.object({
           refund_amount: Joi.number().required(),
           refund_speed: Joi.string().required(),
           refund_status: Joi.string().required(),
-
+          refund_note: Joi.string().optional(),
+          failure_details: Joi.string().optional(),
           refund_gateway_details: Joi.object({
             gateway_name: Joi.string().required(),
             gateway_payment_id: Joi.string().required(),
-            gateway_refund_id: Joi.string().required()
-          }).required()
-        }).required()
-      }
+            gateway_refund_id: Joi.string().required(),
+          })
+            .unknown(true)
+            .required(),
+        }).required(),
+      },
     ],
 
-    otherwise: Joi.forbidden()
-  })
-});
+    otherwise: Joi.forbidden(),
+  }),
+})
+  .unknown(true)
+  .required(); // allow additional Cashfree fields

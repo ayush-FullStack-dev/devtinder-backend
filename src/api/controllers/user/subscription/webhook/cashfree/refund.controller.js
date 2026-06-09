@@ -1,5 +1,5 @@
 import PaymentOrder from "../../../../../../models/subscription/PaymentOrder.model.js";
-import Subscription from "../../../../../../models/subscription/Subscription.model.js";
+import AutoPay from "../../../../../../models/subscription/AutoPay.model.js";
 import sendResponse from "../../../../../../helpers/sendResponse.js";
 
 import { refundWebhookSchema } from "../../../../../../validators/user/payment/cashfree/refund.validator.js";
@@ -7,17 +7,14 @@ import { refundWebhookSchema } from "../../../../../../validators/user/payment/c
 import { checkValidation } from "../../../../../../helpers/helpers.js";
 
 export const validateRefundBody = (req, res, next) => {
-  const validPayment = checkValidation(
-    refundWebhookSchema,
-    req,
-    "Invalid refund payload",
-  );
+  const validate = refundWebhookSchema.validate(req.body);
 
-  if (!validPayment?.success) {
-    return sendResponse(res, 400, validPayment.jsonResponse);
+  if (validate.error) {
+    console.log("refundWebhookValidationError", validate.error);
+    return sendResponse(res, 400);
   }
 
-  req.auth = { ...req.auth, value: validPayment.value };
+  req.auth = { ...req.auth, value: validate.value };
   return next();
 };
 

@@ -176,8 +176,6 @@ export const handlePaymentSuccess = async (req, res) => {
     carriedForwardDays,
   });
 
-  console.log(profile.premium.subscriptionId);
-
   if (subscription.fromPlan === subscription.toPlan) {
     await Subscription.findByIdAndUpdate(profile.premium.subscriptionId, {
       using: false,

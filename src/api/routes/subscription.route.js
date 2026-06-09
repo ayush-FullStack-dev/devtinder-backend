@@ -119,7 +119,7 @@ router.post(
 
 router.post(
   "/webhook/refund/autopay",
-  validateSigntaure,
+  //validateSigntaure,
   validateRefundBody,
   handleRefundAutoPayWebhook,
 );
