@@ -39,6 +39,7 @@ export const isPremiumUser = (config = defaultConfig) => {
 
 export const checkPremiumStatus = async (req, res, next) => {
     const { currentProfile } = req.auth;
+    const day = 1000 * 60 * 60 * 24;
     let profileInfo = null;
 
     if (!currentProfile) {

@@ -11,6 +11,13 @@ export const subscriptionPlans = async (req, res) => {
     const { currentProfile } = req.auth;
     const premium = buildSubscriptionInfo(currentProfile.premium);
 
+    const currentSubscription = currentProfile.premium?.subscriptionId
+        ? await Subscription.findById(currentProfile.premium.subscriptionId).select(
+              "isTrial"
+          )
+        : null;
+    const currentPlanIsTrial = !!currentSubscription?.isTrial;
+
     const trailInfo = await Subscription.findOne({
         userId: currentProfile._id,
         isTrial: true,
@@ -116,9 +123,12 @@ export const subscriptionPlans = async (req, res) => {
                 currentPlanId === "free"
                     ? "Free"
                     : currentPlanId === "gold"
-                      ? "Gold"
+                      ? currentPlanIsTrial
+                        ? "Gold Trial"
+                        : "Gold"
                       : "Silver",
             isPaid: currentPlanId !== "free",
+            isTrial: currentPlanIsTrial,
             startedAt:
                 currentPlanId === "free" ? null : currentProfile.premium.since,
             expiresAt: currentPlanId === "free" ? null : premium.expiresAt,

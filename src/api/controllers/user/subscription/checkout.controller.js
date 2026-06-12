@@ -24,14 +24,14 @@ export const validatePlan = (req, res, next) => {
     });
   }
 
-  // if (
-  //   PLANS[planId.toUpperCase()].price <
-  //   PLANS[(premium.isActive ? premium.tier : "free").toUpperCase()].price
-  // ) {
+  const currentPlanId = premium.isActive ? premium.tier : "free";
+  const currentPlanPrice = PLANS[currentPlanId.toUpperCase()]?.price || 0;
+
+  // if (PLANS[planId.toUpperCase()].price < currentPlanPrice) {
   //   return sendResponse(res, 409, {
   //     code: "DOWNGRADE_NOT_ALLOWED",
-  //     message: `Downgrading from ${premium.tier} to ${planId} is not allowed`,
-  //     currentPlan: premium.tier,
+  //     message: `Downgrading from ${currentPlanId} to ${planId} is not allowed`,
+  //     currentPlan: currentPlanId,
   //     attemptedPlan: planId,
   //   });
   // }
@@ -156,7 +156,7 @@ export const createOrder = async (req, res, next) => {
       customer_phone: currentProfile.phone.mobile,
     },
     order_meta: {
-      return_url: `${process.env.DOMAIN_LINK}/payment-status?order_id=${order._id}`,
+      return_url: `${process.extra.DOMAIN_LINK}/payment-status?order_id=${order._id}`,
     },
   });
 

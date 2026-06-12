@@ -13,7 +13,7 @@ export const refundAutopaySubscription = async (req, res) => {
 
   const subscriptionInfo = await Subscription.findOne({
     userId: currentProfile._id,
-    // isTrial: false,
+    isTrial: false,
     using: true,
     used: false,
   }).populate([
