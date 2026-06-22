@@ -42,7 +42,7 @@ Authorization: Bearer <access-token>
 ## Example: login (curl)
 
 ```bash
-curl -X POST https://api.example.com/api/auth/login \
+curl -X POST https://api-devtinder.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"dev@example.com","password":"secret"}'
 ```
@@ -97,7 +97,7 @@ Below are the primary API groups, common endpoints, short usage examples, and tr
 
 ## Base path
 
-All examples assume the API base is `/api` (e.g. `https://api.example.com/api`). Adjust according to your proxy or deployment.
+All examples assume the API base is `/api` (e.g. `https://api-devtinder.onrender.com/api`). Adjust according to your proxy or deployment.
 
 ## Auth (important endpoints)
 
@@ -111,7 +111,7 @@ All examples assume the API base is `/api` (e.g. `https://api.example.com/api`).
 Example — signup:
 
 ```bash
-curl -X POST https://api.example.com/api/auth/signup/ \
+curl -X POST https://api-devtinder.onrender.com/api/auth/signup/ \
   -H "Content-Type: application/json" \
   -d '{"name":"Dev","email":"dev@example.com","password":"secret"}'
 ```
@@ -119,7 +119,7 @@ curl -X POST https://api.example.com/api/auth/signup/ \
 Example — refresh tokens (client sends refresh token in header or cookie according to your client implementation):
 
 ```bash
-curl -X POST https://api.example.com/api/auth/refresh/ \
+curl -X POST https://api-devtinder.onrender.com/api/auth/refresh/ \
   -H "Authorization: Bearer <refresh-token>"
 ```
 
@@ -141,7 +141,7 @@ Troubleshooting (auth):
 Example — fetch own profile:
 
 ```bash
-curl -H "Authorization: Bearer <token>" https://api.example.com/api/profile/me
+curl -H "Authorization: Bearer <token>" https://api-devtinder.onrender.com/api/profile/me
 ```
 
 Troubleshooting (profile):
@@ -159,7 +159,7 @@ Troubleshooting (profile):
 Example — like a user:
 
 ```bash
-curl -X POST -H "Authorization: Bearer <token>" https://api.example.com/api/discover/like/johndoe
+curl -X POST -H "Authorization: Bearer <token>" https://api-devtinder.onrender.com/api/discover/like/johndoe
 ```
 
 Troubleshooting (discover):
@@ -175,7 +175,7 @@ Troubleshooting (discover):
 Example — list matches:
 
 ```bash
-curl -H "Authorization: Bearer <token>" https://api.example.com/api/match/
+curl -H "Authorization: Bearer <token>" https://api-devtinder.onrender.com/api/match/
 ```
 
 ## Chat

@@ -35,7 +35,7 @@ Example (browser):
 ```javascript
 import { io } from "socket.io-client";
 
-const socket = io("https://api.example.com", {
+const socket = io("https://api-devtinder.onrender.com", {
   path: "/socket.io",
   auth: { token: "Bearer <access-token>" },
   transports: ["websocket"],
