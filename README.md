@@ -1,8 +1,74 @@
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
-![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
+## Backend Tech Stack
+
+<p align="center">
+
+  <!-- Core Backend -->
+
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" />
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" />
+  <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" />
+  <img src="https://img.shields.io/badge/Socket.IO-010101?style=for-the-badge&logo=socketdotio&logoColor=white" />
+
+</p>
+
+<p align="center">
+
+  <!-- Authentication & Security -->
+
+  <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" />
+  <img src="https://img.shields.io/badge/WebAuthn-5A67D8?style=for-the-badge&logo=webauthn&logoColor=white" />
+  <img src="https://img.shields.io/badge/Bcrypt-FF6B6B?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Helmet-111111?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/CORS-2C3E50?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/OTP-Validation-7C3AED?style=for-the-badge" />
+
+</p>
+
+<p align="center">
+
+  <!-- Cloud & Storage -->
+
+  <img src="https://img.shields.io/badge/AWS_S3-569A31?style=for-the-badge&logo=amazonaws&logoColor=white" />
+  <img src="https://img.shields.io/badge/Firebase_Admin-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" />
+  <img src="https://img.shields.io/badge/Web_Push-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" />
+
+</p>
+
+<p align="center">
+
+  <!-- Payments -->
+
+  <img src="https://img.shields.io/badge/Razorpay-02042B?style=for-the-badge&logo=razorpay&logoColor=white" />
+  <img src="https://img.shields.io/badge/Cashfree-0066FF?style=for-the-badge" />
+
+</p>
+
+<p align="center">
+
+  <!-- Utilities -->
+
+  <img src="https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white" />
+  <img src="https://img.shields.io/badge/Joi-Validation-D16BA5?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Nodemailer-0A66C2?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Cron_Jobs-4CAF50?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/QRCode-000000?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/GeoIP-00897B?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/User_Agent_Parser-607D8B?style=for-the-badge" />
+
+</p>
+
+<p align="center">
+
+  <!-- Media & Misc -->
+
+  <img src="https://img.shields.io/badge/FFmpeg-007808?style=for-the-badge&logo=ffmpeg&logoColor=white" />
+  <img src="https://img.shields.io/badge/Dotenv-ECD53F?style=for-the-badge&logo=dotenv&logoColor=black" />
+  <img src="https://img.shields.io/badge/Chalk-222222?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Figlet-FF9800?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Epochify-Custom_Package-6C63FF?style=for-the-badge" />
+
+</p>
 
 # DevTinder — Backend
 

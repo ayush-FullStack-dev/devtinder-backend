@@ -5,6 +5,8 @@ export const cookieOption = {
     secure: process.env.NODE_ENV === "production"
 };
 
+
+
 export const riskLevel = ["verylow", "low", "mid", "high", "veryhigh"];
 export const platform = ["web", "android", "os"];
 export const eventType = ["login", "step_up", "mfa_manage"];

@@ -20,9 +20,9 @@ import paymentRouter from "./api/routes/payment.route.js";
 
 // global routes
 import {
-    getInfo,
-    handleError,
-    handleNotFound
+  getInfo,
+  handleError,
+  handleNotFound
 } from "./api/controllers/controller.js";
 
 // others import
@@ -37,28 +37,24 @@ app.set("json spaces", 2);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(
-    express.json({
-        verify: (req, res, buf) => {
-            req.rawBody = buf.toString();
-        }
-    })
-);
-app.use(
-    cors({
-        origin: [
-            "https://whatsapp-test-mu.vercel.app",
-            "http://localhost:8159",
-            "http://localhost:8158",
-            "http://localhost:5500"
-        ],
-        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-        credentials: true
-    })
+  express.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  }),
 );
 
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
+);
+
+app.use(helmet());
 app.use(express.static(getPath.publicDir));
 app.use(cookieParser(process.env.COOKIE_SECRET));
-app.use(helmet());
+
 app.use(getInfo);
 
 // routes

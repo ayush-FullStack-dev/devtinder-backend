@@ -56,7 +56,10 @@ export const validateBasicInfo = (req, res, next) => {
     const { clientTimestamp, deviceId, deviceSize } = req.body;
 
     if (!clientTimestamp) {
-      return sendResponse(res, 400, "Client timestamp is required");
+      return sendResponse(res, 400, {
+        code: "clientTimestamp",
+        message: "Client timestamp is required",
+      });
     }
 
     if (!deviceId || deviceId.length !== 32) {
@@ -82,7 +85,10 @@ export const validateBasicInfo = (req, res, next) => {
   const { clientTimestamp, deviceid, devicesize } = req.headers;
 
   if (!clientTimestamp) {
-    return sendResponse(res, 400, "Client timestamp is required");
+    return sendResponse(res, 400, {
+      code: "clientTimestamp",
+      message: "Client timestamp is required",
+    });
   }
 
   if (!deviceid || deviceid.length !== 32) {
