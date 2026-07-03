@@ -6,14 +6,14 @@ import { systemHealth } from "../controllers/system/system.controller.js";
 const router = express.Router();
 
 router.get(
-    "/health/",
-    rateLimiter({
-        limit: 20,
-        window: 1,
-        block: 2,
-        route: "health"
-    }),
-    systemHealth
+  "/health/",
+  rateLimiter({
+    limit: 60,
+    window: 1,
+    block: 2,
+    route: "health",
+  }),
+  systemHealth,
 );
 
 export default router;

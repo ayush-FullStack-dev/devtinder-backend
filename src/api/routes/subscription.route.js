@@ -74,6 +74,12 @@ router.get("/history", validateBasicInfo, subscriptionHistory);
 router.post(
   "/checkout",
   validateBasicInfo,
+  rateLimiter({
+    limit: 10,
+    window: 5,
+    block: 10,
+    route: "subscription:checkout",
+  }),
   validatePlan,
   initlizeGateway,
   validateCoupon,
@@ -85,19 +91,70 @@ router.post(
 router.post(
   "/activate-trial",
   validateBasicInfo,
+  rateLimiter({
+    limit: 5,
+    window: 60,
+    block: 30,
+    route: "subscription:activate_trial",
+  }),
   activateTrial,
   initlizeGateway,
   createAutopay,
   sendPayment,
 );
 
-router.post("/refund", refundSubscription);
-router.post("/refund-autopay", refundAutopaySubscription);
+router.post(
+  "/refund",
+  rateLimiter({
+    limit: 5,
+    window: 60,
+    block: 30,
+    route: "subscription:refund",
+  }),
+  refundSubscription,
+);
+router.post(
+  "/refund-autopay",
+  rateLimiter({
+    limit: 5,
+    window: 60,
+    block: 30,
+    route: "subscription:refund_autopay",
+  }),
+  refundAutopaySubscription,
+);
 
-router.post("/pause-autopay", pauseAutopay);
-router.post("/resume-autopay", resumeAutopay);
+router.post(
+  "/pause-autopay",
+  rateLimiter({
+    limit: 10,
+    window: 60,
+    block: 5,
+    route: "subscription:pause_autopay",
+  }),
+  pauseAutopay,
+);
+router.post(
+  "/resume-autopay",
+  rateLimiter({
+    limit: 10,
+    window: 60,
+    block: 5,
+    route: "subscription:resume_autopay",
+  }),
+  resumeAutopay,
+);
 
-router.post("/cancel-autopay", cancelAutopay);
+router.post(
+  "/cancel-autopay",
+  rateLimiter({
+    limit: 3,
+    window: 60,
+    block: 30,
+    route: "subscription:cancel_autopay",
+  }),
+  cancelAutopay,
+);
 
 router.post(
   "/webhook/autopay",

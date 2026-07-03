@@ -22,7 +22,7 @@ import paymentRouter from "./api/routes/payment.route.js";
 import {
   getInfo,
   handleError,
-  handleNotFound
+  handleNotFound,
 } from "./api/controllers/controller.js";
 
 // others import
@@ -54,7 +54,6 @@ app.use(
 app.use(helmet());
 app.use(express.static(getPath.publicDir));
 app.use(cookieParser(process.env.COOKIE_SECRET));
-
 app.use(getInfo);
 
 // routes
