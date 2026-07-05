@@ -208,14 +208,6 @@ export const verifyLoginPasskey = async (req, res, next) => {
     return next();
   }
 
-  if (info.risk === "verylow") {
-    req.auth.verify = {
-      success: true,
-      method: "passkey",
-    };
-    return next();
-  }
-
   if (!["low", "mid", "high"].includes(info.risk)) {
     return next();
   }
@@ -231,11 +223,13 @@ export const verifyLoginPasskey = async (req, res, next) => {
     return next();
   }
 
+  const passkeyPayload = values.code;
+
   const passkeyIndex = user.loginMethods.passkeys.keys.findIndex(
-    (k) => k.credentialId === req.body?.id,
+    (k) => k.credentialId === passkeyPayload?.id,
   );
 
-  if (passkeyIndex === -1) {
+  if (passkeyIndex === 1) {
     req.auth.verify = {
       success: false,
       method: "passkey",
@@ -245,7 +239,7 @@ export const verifyLoginPasskey = async (req, res, next) => {
   }
 
   const verification = await verifyKey(
-    values,
+    passkeyPayload,
     saved,
     user.loginMethods.passkeys.keys[passkeyIndex],
   );
@@ -304,14 +298,6 @@ export const verifyLoginPassword = async (req, res, next) => {
     return next();
   }
 
-  if (info.risk === "verylow") {
-    req.auth.verify = {
-      success: true,
-      method: "password",
-    };
-    return next();
-  }
-
   if (!["low", "mid", "high"].includes(info.risk)) {
     return next();
   }
@@ -365,14 +351,6 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
     return next();
   }
 
-  if (info.risk === "verylow") {
-    req.auth.verify = {
-      success: true,
-      method: "session_approval",
-    };
-    return next();
-  }
-
   const approval = await getSession(
     `session:approval:${req.signedCookies?.approvalId}`,
   );
@@ -422,14 +400,6 @@ export const verifyLoginSecurityCode = async (req, res, next) => {
   }
 
   if (values?.method !== "security_code") {
-    return next();
-  }
-
-  if (info.risk === "verylow") {
-    req.auth.verify = {
-      success: true,
-      method: "security_code",
-    };
     return next();
   }
 
