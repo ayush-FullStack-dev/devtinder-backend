@@ -76,7 +76,8 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
       risk: riskLevel,
       loginCtx: ctxId,
       message: "Signed in automatically",
-      primaryMethod: "auto",
+      primaryMethod: "trusted_session",
+      passkey: options,
       allowedMethod: [
         "passkey",
         "password",

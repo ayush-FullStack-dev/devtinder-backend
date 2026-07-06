@@ -97,7 +97,7 @@ export const getTrustedScore = async (current, lastInfos) => {
     const sameDevice = compareNoSaltHash(current.deviceId, lastLogin.deviceId);
     if (!sameDevice) return 0;
 
-    if (lastLogin.risk === "high" || lastLogin.risk === "veryHigh") {
+    if (lastLogin.risk === "high" || lastLogin.risk === "veryhigh") {
         return 0;
     }
 
