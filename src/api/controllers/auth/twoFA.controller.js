@@ -102,7 +102,7 @@ export const startTwoFAHandler = async (req, res) => {
     });
 
     if (!user) {
-        return clearCtxId(res, 401, "user not found", "twoFA_ctx");
+        return clearCtxId(res, 401, "User Not Found", "twoFA_ctx");
     }
 
     let isValid = await getSession(`2fa:data:${ctxId}`);

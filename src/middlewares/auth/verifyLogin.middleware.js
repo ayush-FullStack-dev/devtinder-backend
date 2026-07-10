@@ -366,6 +366,7 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
       .json({
         message: "session approval request send successfully",
         approvalId: response.approvalId,
+        device: response.device,
         route: req.originalUrl,
       });
   }
