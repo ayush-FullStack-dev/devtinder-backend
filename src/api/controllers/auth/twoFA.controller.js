@@ -140,6 +140,7 @@ export const startTwoFAHandler = async (req, res) => {
     if (loginMethod === "EMAIL" && method.email.enabled) {
         let message = "Trusted device detected. Completing secure sign-in…";
         let requireCode = false;
+        
         const deviceTrust = await isDeviceTrusted({
             ctxId,
             trustedId: req.signedCookies.trustedDeviceId,

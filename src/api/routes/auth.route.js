@@ -186,7 +186,7 @@ router.post(
 router.post(
   "/login/confirm/",
   validateBasicInfo,
-  rateLimiter({ limit: 30, window: 60, block: 5, route: "login:confirm" }),
+  rateLimiter({ limit: 30, window: 10, block: 5, route: "login:confirm" }),
   verifyLoginValidation, // context + risk
   verifyLoginTrustDevice, // trusted session
   verifyLoginPasskey, // verylow / low / mid / high auto-login or verify
@@ -400,9 +400,9 @@ router
   .get(sessionApprovealInfo)
   .post(
     rateLimiter({
-      limit: 5,
-      window: 10,
-      block: 30,
+      limit: 10,
+      window: 5,
+      block: 10,
       route: "approve_login",
     }),
     sessionApprovealHandler,

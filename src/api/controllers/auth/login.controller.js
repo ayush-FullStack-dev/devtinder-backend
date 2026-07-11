@@ -246,6 +246,7 @@ export const verifyLoginHandler = async (req, res) => {
     .cookie("trustedSession", trustedSession, cookieOption)
     .json({
       success: true,
+      code: "LOGIN_SUCCESS",
       message: "User login successfully",
       data: {
         name: updatedUser.name,

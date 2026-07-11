@@ -31,6 +31,7 @@ import {
 import { verifyKey } from "../../helpers/passkey.js";
 
 import { verifyHash } from "../../helpers/hash.js";
+import { success } from "../../../logs/printLogs.js";
 
 const trackMethodFailure = async (ctxId, method) => {
   const key = `login:attempts:${ctxId}:${method}`;
@@ -341,7 +342,7 @@ export const verifyLoginPassword = async (req, res, next) => {
 };
 
 export const verifyLoginSessionApproval = async (req, res, next) => {
-  const { user, info, values, verify, deviceInfo } = req.auth;
+  const { user, info, values, verify, deviceInfo, ctxId } = req.auth;
 
   if (verify?.success !== undefined) {
     return next();
@@ -357,6 +358,7 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
 
   if (!approval) {
     const response = await sendSessionApproval(deviceInfo, user);
+
     return res
       .status(200)
       .cookie("approvalId", response.approvalId, {
@@ -364,15 +366,18 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
         maxAge: 2 * 60 * 1000,
       })
       .json({
-        message: "session approval request send successfully",
-        approvalId: response.approvalId,
-        device: response.device,
-        route: req.originalUrl,
+        success: true,
+        code: "SESSION_APPROVAL_REQUESTED",
+        timeout: response.timeout,
+        message: "Session approval request send successfully",
       });
   }
 
   if (approval?.status === "pending") {
-    return sendResponse(res, 202, "waiting for approval...");
+    return sendResponse(res, 202, {
+      code: "WAITING_FOR_APPROVAL",
+      message: "Waiting for approval...",
+    });
   }
 
   req.auth.verify = checkSessionApproval(approval, info);

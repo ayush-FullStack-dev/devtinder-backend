@@ -14,6 +14,7 @@ const normalizeDeviceInfo = (deviceInfo) => ({
 export const sendSessionApproval = async (deviceInfo, user) => {
   const approvalId = crypto.randomBytes(16).toString("hex");
   const normalizedDeviceInfo = normalizeDeviceInfo(deviceInfo);
+  const timeout = 120;
 
   await setSession(
     {
@@ -26,7 +27,7 @@ export const sendSessionApproval = async (deviceInfo, user) => {
     approvalId,
     `session:approval`,
     "EX",
-    120,
+    timeout,
   );
 
   const trustedDevices = Array.isArray(user?.trustedDevices)
@@ -54,7 +55,7 @@ export const sendSessionApproval = async (deviceInfo, user) => {
 
   return {
     approvalId,
-    device: normalizedDeviceInfo,
+    timeout,
   };
 };
 
@@ -63,6 +64,7 @@ export const checkSessionApproval = (approval, info) => {
     return {
       success: true,
       method: "session_approval",
+      code: "APPROVAL_ACCEPTED",
       stepup: info.risk === "high" || info.risk === "veryhigh",
     };
   }
@@ -70,7 +72,8 @@ export const checkSessionApproval = (approval, info) => {
   if (approval?.status === "declined") {
     return {
       success: false,
-      message: "session approval rejected by user",
+      code: "APPROVAL_REJECTED",
+      message: "Session approval rejected by user",
       method: "session_approval",
     };
   }

@@ -54,7 +54,7 @@ export const sessionApprovealHandler = async (req, res) => {
         return sendResponse(
             res,
             400,
-            "Invalid decision. Allowed values are 'approve' or 'decline'."
+            "Invalid decision.Allowed values are 'approve' or 'decline'."
         );
     }
 

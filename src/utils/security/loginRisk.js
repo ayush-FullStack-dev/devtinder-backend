@@ -62,7 +62,6 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
       return {
         action: "REQUIRED_METHOD",
         risk: riskLevel,
-        loginCtx: ctxId,
         allowedMethod: ["passkey", "password"],
         primaryMethod: "passkey",
         passkey: options,
@@ -74,7 +73,6 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "AUTO_LOGIN",
       risk: riskLevel,
-      loginCtx: ctxId,
       message: "Signed in automatically",
       primaryMethod: "trusted_session",
       passkey: options,
@@ -92,7 +90,6 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
-      loginCtx: ctxId,
       allowedMethod: ["passkey", "password"],
       primaryMethod: "passkey",
       passkey: options,
@@ -103,7 +100,6 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
-      loginCtx: ctxId,
       allowedMethod: [
         "passkey",
         "password",
@@ -119,7 +115,6 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
-      loginCtx: ctxId,
       primaryMethod: "security_code",
       allowedMethod: [
         "password",
@@ -135,7 +130,6 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
   return {
     action: "REQUIRED_METHOD",
     risk: riskLevel,
-    loginCtx: ctxId,
     allowedMethod: ["security_code", "session_approval"],
     primaryMethod: "security_code",
     stepUp: ["2fa"],
@@ -156,7 +150,6 @@ export const buildVerifyDecisionResponse = async (riskLevel, ctxId, user) => {
       return {
         action: "REQUIRED_METHOD",
         risk: riskLevel,
-        loginCtx: ctxId,
         allowedMethod: ["passkey", "password"],
         primaryMethod: "passkey",
         passkey: options,
@@ -169,7 +162,6 @@ export const buildVerifyDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
-      loginCtx: ctxId,
       allowedMethod: ["passkey", "password"],
       passkey: options,
     };
@@ -179,7 +171,6 @@ export const buildVerifyDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
-      loginCtx: ctxId,
       allowedMethod: [
         "passkey",
         "password",
@@ -195,7 +186,6 @@ export const buildVerifyDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
-      loginCtx: ctxId,
       primaryMethod: "security_code",
       allowedMethod: [
         "password",
@@ -211,7 +201,6 @@ export const buildVerifyDecisionResponse = async (riskLevel, ctxId, user) => {
   return {
     action: "REQUIRED_METHOD",
     risk: riskLevel,
-    loginCtx: ctxId,
     allowedMethod: ["security_code", "session_approval"],
     primaryMethod: "security_code",
     stepUp: ["2fa"],
