@@ -380,6 +380,7 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
     });
   }
 
+
   req.auth.verify = checkSessionApproval(approval, info);
 
   if (!req.auth.verify?.success) {
