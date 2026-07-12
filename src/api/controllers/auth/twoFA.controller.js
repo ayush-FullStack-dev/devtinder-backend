@@ -4,7 +4,7 @@ import ApiError from "../../../helpers/ApiError.js";
 import redis from "../../../config/redis.js";
 import sendResponse, { clearCtxId } from "../../../helpers/sendResponse.js";
 
-import { cookieOption } from "../../../constants/auth.constant.js";
+import { cookieOption, accessTokenCookieOption, refreshTokenCookieOption, trustedSessionCookieOption } from "../../../constants/auth.constant.js";
 import { buildAuthInfo } from "../../../helpers/authEvent.js";
 import {
     createAuthEvent,
@@ -95,7 +95,7 @@ export const startTwoFAHandler = async (req, res) => {
         ip
     };
 
-    const fingerprint = await fingerprintBuilder(req.auth.deviceInfo);
+    const fingerprint = fingerprintBuilder(req.auth.deviceInfo);
 
     const user = await findUser({
         email
@@ -266,10 +266,10 @@ export const verifyTwoFAHandler = async (req, res) => {
         {
             _id: user._id
         },
-        refreshExpiry
+        refreshExpiry.jwt
     );
 
-    tokenInfo.fingerprint = await fingerprintBuilder(tokenInfo);
+    tokenInfo.fingerprint = fingerprintBuilder(tokenInfo);
     tokenInfo.token = refreshToken;
     tokenInfo.loginContext.mfa = {
         required: true,
@@ -350,9 +350,9 @@ export const verifyTwoFAHandler = async (req, res) => {
 
     res.status(200)
         .clearCookie("twoFA_ctx", cookieOption)
-        .cookie("accessToken", accessToken, cookieOption)
-        .cookie("refreshToken", refreshToken, cookieOption)
-        .cookie("trustedDeviceId", checkDeviceTrusted?.trustedId, cookieOption)
+        .cookie("accessToken", accessToken, accessTokenCookieOption)
+        .cookie("refreshToken", refreshToken, refreshTokenCookieOption(refreshExpiry.ms))
+        .cookie("trustedDeviceId", checkDeviceTrusted?.trustedId, trustedSessionCookieOption)
         .json({
             success: true,
             message: "User login successfully",

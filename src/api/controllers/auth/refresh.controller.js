@@ -1,7 +1,7 @@
 import { removeCookie } from "../../../helpers/sendResponse.js";
 import { updateUser } from "../../../services/user.service.js";
 
-import { cookieOption } from "../../../constants/auth.constant.js";
+import { cookieOption, accessTokenCookieOption, refreshTokenCookieOption } from "../../../constants/auth.constant.js";
 
 import {
   logoutAllSession,
@@ -9,12 +9,11 @@ import {
 } from "../../../middlewares/auth/logout.middleware.js";
 
 export const issueNewTokens = async (req, res, next) => {
-  const { user, verify, token, refreshToken, accessToken } = req.auth;
+  const { user, verify, token, refreshToken, accessToken, refreshMaxAge } = req.auth;
   req.auth.device = token;
   req.auth.reason = "security_risk";
   if (verify?.action === "logout-all") {
     await logoutAllSession(req);
-
     return res
       .clearCookie("accessToken", cookieOption)
       .clearCookie("refreshToken", cookieOption)
@@ -23,10 +22,12 @@ export const issueNewTokens = async (req, res, next) => {
       .status(401)
       .json({
         success: false,
+        action: "logout-all",
         message: verify?.message,
-        logout: verify?.action,
       });
-  } else if (verify?.action === "logout") {
+  }
+
+  if (verify?.action === "logout") {
     const info = await logoutCurrentSession(req);
     return res
       .clearCookie("accessToken", cookieOption)
@@ -35,26 +36,22 @@ export const issueNewTokens = async (req, res, next) => {
       .clearCookie("trustedDeviceId", cookieOption)
       .status(401)
       .json({
-        ...info,
+        success: false,
+        action: "logout",
         message: verify?.message,
+        ...info,
       });
   }
 
-  await updateUser(
-    {
-      _id: user._id,
-    },
-    {
-      refreshToken: user.refreshToken,
-    },
-  );
+  await updateUser({ _id: user._id }, { refreshToken: user.refreshToken });
 
-  res
+  return res
     .status(200)
-    .cookie("accessToken", accessToken, cookieOption)
-    .cookie("refreshToken", refreshToken, cookieOption)
+    .cookie("accessToken", accessToken, accessTokenCookieOption)
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOption(refreshMaxAge))
     .json({
       success: true,
-      message: "Refresh token successfully",
+      action: "token_refreshed",
+      message: "Session refreshed successfully.",
     });
 };

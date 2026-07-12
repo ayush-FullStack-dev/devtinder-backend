@@ -6,19 +6,22 @@ import { verifyAccesToken } from "../../helpers/token.js";
 export const isLogin = (req, res, next) => {
   const accessToken = req.signedCookies?.accessToken;
   const refreshToken = req.signedCookies?.refreshToken;
-  const data = verifyAccesToken(accessToken);
 
-  if (!accessToken) {
+  if (!refreshToken) {
     return sendResponse(res, 401, {
       message: "Login required to access this resource.",
       code: "login_required",
+      isLoggedIn: false,
     });
   }
+
+  const data = verifyAccesToken(accessToken);
 
   if (!data?.success) {
     return sendResponse(res, 401, {
       message: data.message,
       code: "refresh_auth_token",
+      isLoggedIn: false,
     });
   }
 
@@ -27,6 +30,7 @@ export const isLogin = (req, res, next) => {
     info: data?.data,
     refreshToken,
   };
+
   return next();
 };
 
@@ -41,6 +45,7 @@ export const findLoginData = async (req, res, next) => {
     return sendResponse(res, 401, {
       message: "AccessToken is invalid please login again.",
       code: "relogin_required",
+      isLoggedIn: false,
     });
   }
 

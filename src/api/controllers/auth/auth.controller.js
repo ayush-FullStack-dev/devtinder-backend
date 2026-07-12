@@ -25,7 +25,7 @@ export const verifyIdentifyHandler = async (req, res, next) => {
         req.body,
        await getIpDetails(req.realIp)
     );
-    deviceInfo.fingerprint = await fingerprintBuilder(deviceInfo);
+    deviceInfo.fingerprint = fingerprintBuilder(deviceInfo);
     const score = await calculateLoginRisk(user, deviceInfo, time);
     let riskLevel = await resolveRiskLevel(score, user.twoFA.enabled);
     riskLevel = riskLevel === "verylow" ? "low" : riskLevel;

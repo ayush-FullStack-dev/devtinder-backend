@@ -27,11 +27,14 @@ export const getRiskScore = async (current, last, others) => {
         timeManip = checkTimeManipulation(others.time);
     }
 
-    const fpValid = await compareFingerprint(
-        current,
-        last.fingerprint ||
-            "$2b$10$EDstMQkU6TFzC9cRATw32OtFI15cveoGhDM0fgYlg9N.9zP2P9AAq"
-    );
+    // Use pre-computed result if available (avoids duplicate bcrypt call from bindTokenToDevice)
+    const fpValid = others?.validFp !== undefined
+        ? others.validFp
+        : await compareFingerprint(
+              current,
+              last.fingerprint ||
+                  "$2b$10$EDstMQkU6TFzC9cRATw32OtFI15cveoGhDM0fgYlg9N.9zP2P9AAq"
+          );
 
     let geoScore = 0;
 

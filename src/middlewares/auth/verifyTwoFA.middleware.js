@@ -8,7 +8,7 @@ import crypto from "crypto";
 import { buildDeviceInfo } from "../../helpers/buildDeviceInfo.js";
 import { decryptData } from "../../helpers/encryption.js";
 import { verifyHash } from "../../helpers/hash.js";
-import { setRefreshExpiry, checkValidation } from "../../helpers/helpers.js";
+import { twoFaRefreshExpiry, checkValidation } from "../../helpers/helpers.js";
 import { getTime } from "../../helpers/time.js";
 import { getIpDetails } from "../../helpers/ip.js";
 
@@ -107,7 +107,7 @@ export const verifyTwoFAValidation = async (req, res, next) => {
         });
     }
 
-    req.auth.refreshExpiry = setRefreshExpiry(validate.value);
+    req.auth.refreshExpiry = twoFaRefreshExpiry();
     req.auth.user = user;
     req.auth.ctxId = ctxId;
     req.auth.time = time;

@@ -1,8 +1,30 @@
-export const cookieOption = {
+const base = {
   httpOnly: true,
   signed: true,
   sameSite: process.env.NODE_ENV === "production" ? "none" : "Lax",
   secure: process.env.NODE_ENV === "production",
+};
+
+export const cookieOption = base;
+
+export const accessTokenCookieOption = {
+  ...base,
+  maxAge: 30 * 60 * 1000,
+};
+
+export const refreshTokenCookieOption = (ms) => ({
+  ...base,
+  maxAge: ms,
+});
+
+export const trustedSessionCookieOption = {
+  ...base,
+  maxAge: 60 * 24 * 60 * 60 * 1000, // 60 days
+};
+
+export const shortLivedCookieOption = {
+  ...base,
+  maxAge: 10 * 60 * 1000, // 10 minutes
 };
 
 export const riskLevel = ["verylow", "low", "mid", "high", "veryhigh"];

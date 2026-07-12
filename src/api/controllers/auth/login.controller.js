@@ -1,7 +1,7 @@
 import sendResponse, { setCtxId } from "../../../helpers/sendResponse.js";
 import crypto from "crypto";
 
-import { cookieOption } from "../../../constants/auth.constant.js";
+import { cookieOption, accessTokenCookieOption, refreshTokenCookieOption, trustedSessionCookieOption, shortLivedCookieOption } from "../../../constants/auth.constant.js";
 
 import { findUser, updateUser } from "../../../services/user.service.js";
 import {
@@ -135,7 +135,7 @@ export const verifyLoginHandler = async (req, res) => {
     });
   }
 
-  if (verify?.stepup && user.twoFA.enabled) {
+  if (verify?.stepup && user.twoFA.enabled && !["passkey"].includes(verify?.method)) {
     const data = await setTwoFa(ctxId, userInfo, methods);
     user.twoFA.tokenInfo.push(data.info);
 
@@ -156,7 +156,7 @@ export const verifyLoginHandler = async (req, res) => {
     return res
       .status(401)
       .clearCookie("login_ctx", cookieOption)
-      .cookie("twoFA_ctx", data.ctxId, cookieOption)
+      .cookie("twoFA_ctx", data.ctxId, shortLivedCookieOption)
       .json(data.response);
   }
 
@@ -165,14 +165,15 @@ export const verifyLoginHandler = async (req, res) => {
     sub: user._id, // user identity
     did: deviceInfo.deviceId, // trusted device
   });
+
   const refreshToken = getRefreshToken(
     {
       _id: user._id,
     },
-    refreshExpiry,
+    refreshExpiry.jwt,
   );
 
-  userInfo.fingerprint = await fingerprintBuilder(userInfo);
+  userInfo.fingerprint = fingerprintBuilder(userInfo);
   userInfo.token = refreshToken;
 
   user.refreshToken.push(tokenBuilder(userInfo));
@@ -238,12 +239,13 @@ export const verifyLoginHandler = async (req, res) => {
     }),
   );
 
+
   res
     .status(200)
     .clearCookie("login_ctx", cookieOption)
-    .cookie("accessToken", accessToken, cookieOption)
-    .cookie("refreshToken", refreshToken, cookieOption)
-    .cookie("trustedSession", trustedSession, cookieOption)
+    .cookie("accessToken", accessToken, accessTokenCookieOption)
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOption(refreshExpiry.ms))
+    .cookie("trustedSession", trustedSession, trustedSessionCookieOption)
     .json({
       success: true,
       code: "LOGIN_SUCCESS",

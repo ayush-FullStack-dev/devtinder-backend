@@ -1,13 +1,21 @@
-import { generateHash, verifyHash } from "../helpers/hash.js";
+import { getNoSaltHash, compareNoSaltHash } from "../helpers/hash.js";
+import bcrypt from "bcryptjs";
 
-export const fingerprintBuilder = userInfo => {
-    const fingerprint = `${userInfo.browser}|${userInfo.os}|${userInfo.osVersion}|${userInfo.deviceModel}|${userInfo.deviceType}|${userInfo.deviceId}|${userInfo.userAgent}|${userInfo.deviceSize}|${userInfo.timezone}`;
-    return generateHash(fingerprint);
+const buildFpString = (userInfo) =>
+  `${userInfo.browser}|${userInfo.os}|${userInfo.osVersion}|${userInfo.deviceModel}|${userInfo.deviceType}|${userInfo.deviceId}|${userInfo.userAgent}|${userInfo.deviceSize}|${userInfo.timezone}`;
+
+export const fingerprintBuilder = (userInfo) => {
+  const fp = typeof userInfo === "string" ? userInfo : buildFpString(userInfo);
+  return getNoSaltHash(fp);
 };
 
-export const compareFingerprint = (org, hash) => {
-    if (typeof org !== "string") {
-        org = `${org.browser}|${org.os}|${org.osVersion}|${org.deviceModel}|${org.deviceType}|${org.deviceId}|${org.userAgent}|${org.deviceSize}|${org.timezone}`;
-    }
-    return verifyHash(org, hash);
+export const compareFingerprint = async (org, hash) => {
+  if (!hash) return false;
+  const fpString = typeof org === "string" ? org : buildFpString(org);
+
+  if (hash.startsWith("$2b$") || hash.startsWith("$2a$")) {
+    return bcrypt.compare(fpString, hash);
+  }
+
+  return compareNoSaltHash(fpString, hash);
 };

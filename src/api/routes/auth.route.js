@@ -71,6 +71,7 @@ import {
 import {
   securityEventHandler,
   activeRiskHandler,
+  accountInfo,
 } from "../controllers/auth/account.controller.js";
 
 // importing middleware
@@ -268,6 +269,13 @@ router.get(
   findLoginData,
   rateLimiter({ limit: 20, window: 60, block: 5, route: "session:list" }),
   sessionHandler,
+);
+
+router.get(
+  "/me",
+  isLogin,
+  rateLimiter({ limit: 150, window: 5, block: 3, route: "account:me" }),
+  accountInfo,
 );
 
 router.post(

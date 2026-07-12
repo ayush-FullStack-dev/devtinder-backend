@@ -1,5 +1,6 @@
 import geoip from "geoip-lite";
 import axios from "axios";
+import redis from "../config/redis.js";
 
 export const defaultIp = "106.192.105.230";
 
@@ -20,11 +21,15 @@ export async function getIpDetails(ip = defaultIp) {
         ip = defaultIp;
     }
 
+    const cacheKey = `ip:geo:${ip}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
     try {
         const { data } = await axios.get(
             `https://ipinfo.io/${ip}?token=${process.env.IP_TOKEN}`
         );
-        return {
+        const result = {
             country: data?.country,
             timezone: data?.timezone,
             region: data?.region,
@@ -32,8 +37,12 @@ export async function getIpDetails(ip = defaultIp) {
             ip: data.ip,
             location: `${data?.city},${data?.country}`
         };
+        await redis.set(cacheKey, JSON.stringify(result), "EX", 3600);
+        return result;
     } catch (error) {
-        return getAltIpDetails(ip);
+        const result = getAltIpDetails(ip);
+        await redis.set(cacheKey, JSON.stringify(result), "EX", 3600);
+        return result;
     }
 }
 

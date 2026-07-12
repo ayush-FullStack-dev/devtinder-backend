@@ -52,7 +52,7 @@ export const loginIdentifyValidation = async (req, res, next) => {
         await getIpDetails(req.realIp)
     );
 
-    deviceInfo.fingerprint = await fingerprintBuilder(deviceInfo);
+    deviceInfo.fingerprint = fingerprintBuilder(deviceInfo);
     req.auth.user = user;
     req.auth.deviceInfo = deviceInfo;
     req.auth.time = getTime(req);
