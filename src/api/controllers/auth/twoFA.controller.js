@@ -6,18 +6,13 @@ import sendResponse, { clearCtxId } from "../../../helpers/sendResponse.js";
 
 import { cookieOption, accessTokenCookieOption, refreshTokenCookieOption, trustedSessionCookieOption } from "../../../constants/auth.constant.js";
 import { buildAuthInfo } from "../../../helpers/authEvent.js";
-import {
-    createAuthEvent,
-    findAuthEvent
-} from "../../../services/authEvent.service.js";
+import { createAuthEvent } from "../../../services/authEvent.service.js";
 import {
     sendOtp,
     sendSuspiciousAlert,
     sendLoginAlert
 } from "../../../helpers/mail.js";
-import { getRefreshToken, getAccessToken } from "../../../helpers/token.js";
 import { setOtpMail } from "../../../helpers/twoFa.js";
-import { getNoSaltHash } from "../../../helpers/hash.js";
 
 import { findUser, updateUser } from "../../../services/user.service.js";
 import {
@@ -32,8 +27,7 @@ import {
 } from "../../../services/session.service.js";
 
 import { fingerprintBuilder } from "../../../utils/fingerprint.js";
-import { getTrustedScore } from "../../../utils/security/riskEngine.js";
-import { tokenBuilder } from "../../../utils/cron.js";
+import { issueTokens } from "../../../utils/issueTokens.js";
 
 export const resendOtpHandler = async (req, res) => {
     const { email, ip, country, time } = req.auth;
@@ -226,26 +220,25 @@ export const startTwoFAHandler = async (req, res) => {
 };
 
 export const verifyTwoFAHandler = async (req, res) => {
-    const { user, verify, userInfo, refreshExpiry, riskLevel, ctxId } =
-        req.auth;
+    const { user, verify, userInfo, refreshExpiry, info, deviceInfo, ctxId } = req.auth;
 
     const tokenInfo = user.twoFA.tokenInfo.find(k => k.ctxId === ctxId);
 
-    if (riskLevel === "high" && !verify?.success) {
-        sendSuspiciousAlert(user.email, req.auth.deviceInfo);
+    if (info.risk === "high" && !verify?.success) {
+        sendSuspiciousAlert(user.email, deviceInfo);
     }
 
     if (!verify?.success) {
         await cleanup2fa(ctxId);
         await createAuthEvent(
-            buildAuthInfo(userInfo, verify, {
+            await buildAuthInfo(userInfo, verify, {
                 _id: user._id,
                 eventType: "login",
                 mfaUsed: verify?.method,
                 loginMethod: tokenInfo?.loginContext?.primary?.method,
                 success: false,
                 action: "login_failed",
-                risk: info.risk
+                risk: info.risk,
             })
         );
         return clearCtxId(res, 401, verify?.message, "twoFA_ctx");
@@ -257,98 +250,40 @@ export const verifyTwoFAHandler = async (req, res) => {
         trustDevice: req.body.trustDevice,
         rememberDevice: req.body.rememberDevice,
         ctxId,
-        userInfo
+        userInfo,
     });
 
-    const accessToken = getAccessToken(user);
-
-    const refreshToken = getRefreshToken(
-        {
-            _id: user._id
-        },
-        refreshExpiry.jwt
-    );
-
-    tokenInfo.fingerprint = fingerprintBuilder(tokenInfo);
-    tokenInfo.token = refreshToken;
-    tokenInfo.loginContext.mfa = {
-        required: true,
-        complete: true,
-        methodsUsed: verify.method
-    };
-
-    user.refreshToken.push(tokenBuilder(tokenInfo));
-
-    if (user.refreshToken.length > process.env.ALLOWED_TOKEN) {
-        user.refreshToken.shift();
+    // patch mfa context onto tokenInfo before issueTokens uses it
+    if (tokenInfo) {
+        tokenInfo.loginContext.mfa = {
+            required: true,
+            complete: true,
+            methodsUsed: verify.method,
+        };
     }
 
-    const lastInfos = await findAuthEvent(
-        {
-            userId: user._id,
-            eventType: "login",
-            success: true,
-            createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
-        },
-        {
-            many: true
-        },
-        { createdAt: -1 }
-    );
+    const { accessToken, refreshToken, trustedSession, updatedUser } = await issueTokens({
+        user,
+        deviceInfo,
+        verify: { ...verify, mfaUsed: verify.method, loginMethod: tokenInfo?.loginContext?.primary?.method },
+        info,
+        refreshExpiry,
+        userInfo: tokenInfo || userInfo,
+    });
 
-    const trustInfo = await getTrustedScore(userInfo, lastInfos);
-    const trustedDevices = user.trustedDevices || [];
-
-    if (trustInfo.trusted) {
-        const deviceIdHash = getNoSaltHash(deviceInfo.deviceId);
-        const alreadyTrust = trustedDevices?.some(
-            k => k.deviceIdHash !== deviceIdHash
-        );
-        if (alreadyTrust) {
-            trustedDevices.push({
-                deviceIdHash,
-                name: userInfo.deviceName,
-                country: userInfo.country,
-                model: userInfo.model,
-                location: userInfo.location,
-                trustScore: trustInfo.score
-            });
-        }
-    }
-
-    const updatedUser = await updateUser(
+    await updateUser(
         user._id,
-        {
-            refreshToken: user.refreshToken,
-            "twoFA.tokenInfo": user.twoFA.tokenInfo.filter(
-                k => !k.ctxId !== ctxId
-            ),
-            trustedDevices
-        },
-        {
-            id: true
-        }
-    );
-
-    await createAuthEvent(
-        buildAuthInfo(userInfo, verify, {
-            _id: user._id,
-            eventType: "login",
-            mfaUsed: verify?.method,
-            loginMethod: tokenInfo?.loginContext?.primary?.method,
-            success: true,
-            trusted: trustInfo.score >= 70,
-            risk: info.risk
-        })
+        { "twoFA.tokenInfo": user.twoFA.tokenInfo.filter(k => k.ctxId !== ctxId) },
+        { id: true },
     );
 
     sendLoginAlert(user.email, {
         name: user.name,
-        ...req.auth.deviceInfo,
-        deviceName: userInfo.deviceName
+        ...deviceInfo,
+        deviceName: userInfo.deviceName,
     });
 
-    res.status(200)
+    return res.status(200)
         .clearCookie("twoFA_ctx", cookieOption)
         .cookie("accessToken", accessToken, accessTokenCookieOption)
         .cookie("refreshToken", refreshToken, refreshTokenCookieOption(refreshExpiry.ms))
@@ -359,7 +294,7 @@ export const verifyTwoFAHandler = async (req, res) => {
             data: {
                 name: updatedUser.name,
                 email: updatedUser.email,
-                picture: updatedUser.picture
-            }
+                picture: updatedUser.picture,
+            },
         });
 };

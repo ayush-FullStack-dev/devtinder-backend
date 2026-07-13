@@ -1,36 +1,38 @@
 import sendResponse, { setCtxId } from "../../../helpers/sendResponse.js";
 import crypto from "crypto";
 
-import { cookieOption, accessTokenCookieOption, refreshTokenCookieOption, trustedSessionCookieOption, shortLivedCookieOption } from "../../../constants/auth.constant.js";
-
-import { findUser, updateUser } from "../../../services/user.service.js";
 import {
-  createAuthEvent,
-  findAuthEvent,
-} from "../../../services/authEvent.service.js";
-import { setSession, cleanupLogin } from "../../../services/session.service.js";
+  cookieOption,
+  accessTokenCookieOption,
+  refreshTokenCookieOption,
+  trustedSessionCookieOption,
+  shortLivedCookieOption,
+} from "../../../constants/auth.constant.js";
 
-import { signToken } from "../../../helpers/jwt.js";
-import { sendSuspiciousAlert } from "../../../helpers/mail.js";
-import { getNoSaltHash } from "../../../helpers/hash.js";
+import { updateUser } from "../../../services/user.service.js";
+import { createAuthEvent } from "../../../services/authEvent.service.js";
+import { setSession } from "../../../services/session.service.js";
+
 import { buildAuthInfo } from "../../../helpers/authEvent.js";
-import { getAccessToken, getRefreshToken } from "../../../helpers/token.js";
 import { collectOnMethod } from "../../../helpers/helpers.js";
 import { setTwoFa } from "../../../helpers/twoFa.js";
 
-import { tokenBuilder } from "../../../utils/cron.js";
-import { fingerprintBuilder } from "../../../utils/fingerprint.js";
 import {
   calculateLoginRisk,
   sendSecurityUpgrade,
   resolveRiskLevel,
   buildLoginDecisionResponse,
 } from "../../../utils/security/loginRisk.js";
-import {
-  getRiskScore,
-  getRiskLevel,
-  getTrustedScore,
-} from "../../../utils/security/riskEngine.js";
+import { issueTokens } from "../../../utils/issueTokens.js";
+
+const buildUserInfo = (deviceInfo, verify, info) => ({
+  ...deviceInfo,
+  loginContext: {
+    primary: { method: verify?.method },
+    mfa: { required: false, complete: true, methodsUsed: "none" },
+    trust: { deviceTrusted: true, sessionLevel: info.risk },
+  },
+});
 
 export const loginIdentifyHandler = async (req, res) => {
   const { user, deviceInfo, time } = req.auth;
@@ -45,7 +47,6 @@ export const loginIdentifyHandler = async (req, res) => {
   const response = await buildLoginDecisionResponse(riskLevel, ctxId, user);
 
   await setSession(deviceInfo, ctxId, "login:info");
-
   await setSession(
     {
       success: true,
@@ -65,13 +66,6 @@ export const loginIdentifyHandler = async (req, res) => {
 export const verifyLoginHandler = async (req, res) => {
   const { refreshExpiry, user, verify, deviceInfo, info, ctxId } = req.auth;
 
-  const primaryMethod = {
-    verylow: "password",
-    low: "passkey",
-    mid: "passkey",
-    high: "security_code",
-  };
-
   const allowedMethod = [
     "passkey",
     "password",
@@ -80,12 +74,16 @@ export const verifyLoginHandler = async (req, res) => {
     "trusted_session",
   ];
 
+  const primaryMethod = {
+    verylow: "password",
+    low: "passkey",
+    mid: "passkey",
+    high: "security_code",
+  };
+
   const methods = collectOnMethod(user.twoFA.twoFAMethods);
 
-  if (
-    verify?.success === undefined &&
-    !allowedMethod.includes(verify?.method)
-  ) {
+  if (verify?.success === undefined && !allowedMethod.includes(verify?.method)) {
     return sendResponse(res, 401, {
       message: "no method provided to verify",
       code: "METHOD_NOT_FOUND",
@@ -105,27 +103,10 @@ export const verifyLoginHandler = async (req, res) => {
         risk: info.risk,
       }),
     );
-
     return sendResponse(res, 401, verify?.message || "UnauthorizedError");
   }
 
-  const userInfo = {
-    ...deviceInfo,
-    loginContext: {
-      primary: {
-        method: verify?.method,
-      },
-      mfa: {
-        required: false,
-        complete: true,
-        methodsUsed: "none",
-      },
-      trust: {
-        deviceTrusted: true,
-        sessionLevel: info.risk,
-      },
-    },
-  };
+  const userInfo = buildUserInfo(deviceInfo, verify, info);
 
   if (verify?.stepup && !user.twoFA.enabled && verify.method === "password") {
     return sendResponse(res, 403, {
@@ -139,19 +120,11 @@ export const verifyLoginHandler = async (req, res) => {
     const data = await setTwoFa(ctxId, userInfo, methods);
     user.twoFA.tokenInfo.push(data.info);
 
-    if (user.twoFA.token?.length > 10) {
-      user.twoFA.token.shift();
+    if (user.twoFA.tokenInfo?.length > 10) {
+      user.twoFA.tokenInfo.shift();
     }
 
-    await updateUser(
-      user._id,
-      {
-        "twoFA.tokenInfo": user.twoFA.tokenInfo,
-      },
-      {
-        id: true,
-      },
-    );
+    await updateUser(user._id, { "twoFA.tokenInfo": user.twoFA.tokenInfo }, { id: true });
 
     return res
       .status(401)
@@ -160,87 +133,31 @@ export const verifyLoginHandler = async (req, res) => {
       .json(data.response);
   }
 
-  const accessToken = getAccessToken(user);
-  const trustedSession = signToken({
-    sub: user._id, // user identity
-    did: deviceInfo.deviceId, // trusted device
+  const { accessToken, refreshToken, trustedSession, updatedUser } = await issueTokens({
+    user,
+    deviceInfo,
+    verify,
+    info,
+    refreshExpiry,
+    userInfo,
   });
 
-  const refreshToken = getRefreshToken(
-    {
-      _id: user._id,
-    },
-    refreshExpiry.jwt,
-  );
-
-  userInfo.fingerprint = fingerprintBuilder(userInfo);
-  userInfo.token = refreshToken;
-
-  user.refreshToken.push(tokenBuilder(userInfo));
-
-  if (user.refreshToken.length > process.env.ALLOWED_TOKEN) {
-    user.refreshToken.shift();
+  // server-side call (e.g. autoLogin after signup)
+  if (req.auth.type === "server") {
+    return {
+      success: true,
+      accessToken,
+      refreshToken,
+      trustedSession,
+      user: {
+        name: updatedUser.name,
+        email: updatedUser.email,
+        picture: updatedUser.picture,
+      },
+    };
   }
 
-  const lastInfos = await findAuthEvent(
-    {
-      userId: user._id,
-      eventType: "login",
-      success: true,
-      createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-    },
-    {
-      many: true,
-    },
-    { createdAt: -1 },
-  );
-
-  const trustInfo = await getTrustedScore(userInfo, lastInfos);
-
-  const trustedDevices = user.trustedDevices || [];
-
-  if (trustInfo.trusted) {
-    const deviceIdHash = getNoSaltHash(deviceInfo.deviceId);
-    const alreadyTrust = trustedDevices?.some(
-      (k) => k.deviceIdHash !== deviceIdHash,
-    );
-
-    if (alreadyTrust) {
-      trustedDevices.push({
-        deviceIdHash,
-        name: deviceInfo.deviceName,
-        country: deviceInfo.country,
-        model: deviceInfo.model,
-        location: deviceInfo.location,
-        trustScore: trustInfo.score,
-      });
-    }
-  }
-
-  const updatedUser = await updateUser(
-    user._id,
-    {
-      refreshToken: user.refreshToken,
-      trustedDevices,
-    },
-    {
-      id: true,
-    },
-  );
-
-  await createAuthEvent(
-    await buildAuthInfo(deviceInfo, verify, {
-      _id: user._id,
-      eventType: "login",
-      mfaUsed: "none",
-      success: true,
-      trusted: trustInfo.score >= 70,
-      risk: info.risk,
-    }),
-  );
-
-
-  res
+  return res
     .status(200)
     .clearCookie("login_ctx", cookieOption)
     .cookie("accessToken", accessToken, accessTokenCookieOption)

@@ -80,3 +80,20 @@ export const deletePendingUser = async (filter, option = { ...options }) => {
   }
   return PendingUser.deleteOne(filter);
 };
+
+export const createOrUpdatePendingUser = async (data) => {
+  return PendingUser.findOneAndUpdate(
+    {
+      $or: [{ email: data.email }, { username: data.username }],
+    },
+    {
+      ...data,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    },
+    {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    },
+  );
+};
