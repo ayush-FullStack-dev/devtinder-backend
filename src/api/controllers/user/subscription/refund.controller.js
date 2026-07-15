@@ -76,7 +76,6 @@ export const refundAutopaySubscription = async (req, res) => {
 
     subscriptionInfo.used = true;
     subscriptionInfo.using = false;
-    subscriptionInfo.carriedForwardDays = 0;
 
     await AutoPay.findByIdAndUpdate(productInfo._id, {
       status: "refund_pending",
@@ -162,7 +161,6 @@ export const refundSubscription = async (req, res) => {
 
     subscriptionInfo.used = true;
     subscriptionInfo.using = false;
-    subscriptionInfo.carriedForwardDays = 0;
 
     await PaymentOrder.findByIdAndUpdate(productInfo._id, {
       status: "refund_pending",

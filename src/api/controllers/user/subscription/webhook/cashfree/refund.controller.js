@@ -25,6 +25,7 @@ export const validateRefundBody = (req, res, next) => {
 
 export const handleRefundWebhook = async (req, res) => {
   const { type, data } = req.auth.value;
+
   const isRefundStatusWebhook = type === "REFUND_STATUS_WEBHOOK";
   const isAutoRefundStatusWebhook = type === "AUTO_REFUND_STATUS_WEBHOOK";
 
@@ -42,6 +43,59 @@ export const handleRefundWebhook = async (req, res) => {
     { $set: { status: refundStatus, refundedAt: new Date() } },
     { returnDocument: "after" },
   );
+
+  if (refundStatus === "refund_failed") {
+    const subscription = await Subscription.findOneAndUpdate(
+      {
+        userId: paymentOrder?.userId,
+        used: true,
+        using: false,
+        $or: [
+          {
+            carriedForwardDays: {
+              $gt: 0,
+            },
+          },
+          {
+            isLifetime: true,
+          },
+        ],
+      },
+      {
+        $set: {
+          using: true,
+          used: false,
+        },
+      },
+      {
+        returnDocument: "after",
+      },
+    ).sort({ updatedAt: -1 });
+
+    const expiresAt = subscription
+      ? subscription.isLifetime
+        ? null
+        : new Date(
+            Date.now() + subscription.carriedForwardDays * 24 * 60 * 60 * 1000,
+          )
+      : null;
+
+    await updateProfile(
+      paymentOrder.userId,
+      {
+        $set: {
+          "premium.type": subscription ? subscription.toPlan : "free",
+          "premium.isLifetime": !!subscription?.isLifetime,
+          "premium.since": subscription?.since ?? null,
+          "premium.subscriptionId": subscription?._id ?? null,
+          "premium.expiresAt": expiresAt,
+        },
+      },
+      { id: true },
+    );
+
+    return sendResponse(res, 200);
+  }
 
   const subscription = await Subscription.findOneAndUpdate(
     {
@@ -99,6 +153,59 @@ export const handleRefundAutoPayWebhook = async (req, res) => {
   );
 
   if (!autoPay) {
+    return sendResponse(res, 200);
+  }
+
+  if (refundStatus === "refund_failed") {
+    const subscription = await Subscription.findOneAndUpdate(
+      {
+        userId: autoPay?.userId,
+        used: true,
+        using: false,
+        $or: [
+          {
+            carriedForwardDays: {
+              $gt: 0,
+            },
+          },
+          {
+            isLifetime: true,
+          },
+        ],
+      },
+      {
+        $set: {
+          using: true,
+          used: false,
+        },
+      },
+      {
+        returnDocument: "after",
+      },
+    ).sort({ updatedAt: -1 });
+
+    const expiresAt = subscription
+      ? subscription.isLifetime
+        ? null
+        : new Date(
+            Date.now() + subscription.carriedForwardDays * 24 * 60 * 60 * 1000,
+          )
+      : null;
+
+    await updateProfile(
+      autoPay.userId,
+      {
+        $set: {
+          "premium.type": subscription ? subscription.toPlan : "free",
+          "premium.isLifetime": !!subscription?.isLifetime,
+          "premium.since": subscription?.since ?? null,
+          "premium.subscriptionId": subscription?._id ?? null,
+          "premium.expiresAt": expiresAt,
+        },
+      },
+      { id: true },
+    );
+
     return sendResponse(res, 200);
   }
 

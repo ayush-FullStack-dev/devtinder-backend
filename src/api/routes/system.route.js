@@ -2,6 +2,7 @@ import express from "express";
 
 import { rateLimiter } from "../../middlewares/auth/security.middleware.js";
 import { systemHealth } from "../controllers/system/system.controller.js";
+import { getPing } from "../controllers/system/ping.controller.js";
 
 const router = express.Router();
 
@@ -15,5 +16,7 @@ router.get(
   }),
   systemHealth,
 );
+
+router.get("/ping/", getPing);
 
 export default router;
