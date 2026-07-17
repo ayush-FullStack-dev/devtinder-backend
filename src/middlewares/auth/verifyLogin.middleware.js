@@ -230,7 +230,7 @@ export const verifyLoginPasskey = async (req, res, next) => {
     (k) => k.credentialId === passkeyPayload?.id,
   );
 
-  if (passkeyIndex === 1) {
+  if (passkeyIndex === -1) {
     req.auth.verify = {
       success: false,
       method: "passkey",

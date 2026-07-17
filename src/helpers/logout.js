@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 export function getLogoutInfo(reason, action, device, ctxId) {
     if (!device) {
         return {

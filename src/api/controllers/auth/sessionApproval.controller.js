@@ -16,7 +16,7 @@ export const sessionApprovealHandler = async (req, res) => {
         );
     }
 
-    if (approval.userId !== user.id) {
+    if (approval.userId?.toString() !== user._id.toString()) {
         return sendResponse(
             res,
             403,
@@ -79,7 +79,7 @@ export const sessionApprovealInfo = async (req, res) => {
         );
     }
 
-    if (approval.userId !== user.id) {
+    if (approval.userId?.toString() !== user._id.toString()) {
         return sendResponse(
             res,
             403,

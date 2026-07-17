@@ -112,7 +112,7 @@ export const verifyTwoFAValidation = async (req, res, next) => {
     req.auth.ctxId = ctxId;
     req.auth.time = time;
     req.auth.loginMethod = loginMethod;
-    req.auth.riskLevel = await getSession(`2fa:data:${ctxId}`).risk;
+    req.auth.riskLevel = (await getSession(`2fa:data:${ctxId}`))?.risk;
     req.auth.code = validate.value.code;
     req.auth.method = user.twoFA.twoFAMethods;
     req.auth.deviceInfo = getDeviceInfo;
@@ -202,8 +202,8 @@ export const verifyTwoFATotp = async (req, res, next) => {
                 { _id: user._id },
                 {
                     $set: {
-                        [`${method}.totp.verified`]: true,
-                        [`${method}.totp.lastUsedAt`]: new Date()
+                        "twoFA.twoFAMethods.totp.verified": true,
+                        "twoFA.twoFAMethods.totp.lastUsedAt": new Date()
                     }
                 }
             );

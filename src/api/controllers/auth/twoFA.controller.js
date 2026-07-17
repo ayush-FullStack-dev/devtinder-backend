@@ -49,7 +49,7 @@ export const resendOtpHandler = async (req, res) => {
         });
     }
 
-    if (isValid.method !== "email") {
+    if (isValid.method !== "EMAIL") {
         return sendResponse(res, 401, {
             message: "otp is only allowed for email method"
         });

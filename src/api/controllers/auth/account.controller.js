@@ -117,7 +117,7 @@ export const activeRiskHandler = async (req, res) => {
 
   const time = isValidWindow(window);
 
-  if (time?.success !== undefined) {
+  if (time?.success === false) {
     return sendResponse(res, 400, time?.message);
   }
 

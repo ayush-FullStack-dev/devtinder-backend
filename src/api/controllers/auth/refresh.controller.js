@@ -1,7 +1,11 @@
 import { removeCookie } from "../../../helpers/sendResponse.js";
 import { updateUser } from "../../../services/user.service.js";
 
-import { cookieOption, accessTokenCookieOption, refreshTokenCookieOption } from "../../../constants/auth.constant.js";
+import {
+  cookieOption,
+  accessTokenCookieOption,
+  refreshTokenCookieOption,
+} from "../../../constants/auth.constant.js";
 
 import {
   logoutAllSession,
@@ -9,9 +13,14 @@ import {
 } from "../../../middlewares/auth/logout.middleware.js";
 
 export const issueNewTokens = async (req, res, next) => {
-  const { user, verify, token, refreshToken, accessToken, refreshMaxAge } = req.auth;
+  const { user, verify, token, refreshToken, accessToken, refreshMaxAge } =
+    req.auth;
   req.auth.device = token;
   req.auth.reason = "security_risk";
+  req.auth.tokenIndex = user.refreshToken.findIndex(
+    (t) => t?.token === token?.token,
+  );
+
   if (verify?.action === "logout-all") {
     await logoutAllSession(req);
     return res
@@ -43,12 +52,22 @@ export const issueNewTokens = async (req, res, next) => {
       });
   }
 
-  await updateUser({ _id: user._id }, { refreshToken: user.refreshToken });
+  await updateUser(
+    { _id: user._id },
+    { refreshToken: user.refreshToken },
+    {
+      id: true,
+    },
+  );
 
   return res
     .status(200)
     .cookie("accessToken", accessToken, accessTokenCookieOption)
-    .cookie("refreshToken", refreshToken, refreshTokenCookieOption(refreshMaxAge))
+    .cookie(
+      "refreshToken",
+      refreshToken,
+      refreshTokenCookieOption(refreshMaxAge),
+    )
     .json({
       success: true,
       action: "token_refreshed",

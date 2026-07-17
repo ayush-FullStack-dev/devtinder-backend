@@ -27,7 +27,7 @@ export const setSession = async (
 
 export const cleanup2fa = async (user, hash) => {
     let id = user._id;
-    if (user !== "object") {
+    if (typeof user !== "object") {
         id = user;
     }
     await redis.del(`device:info:${id}`);
@@ -40,7 +40,7 @@ export const cleanup2fa = async (user, hash) => {
 
 export const cleanupLogin = async user => {
     let id = user._id;
-    if (user !== "object") {
+    if (typeof user !== "object") {
         id = user;
     }
     await redis.del(`login:info:${id}`);

@@ -18,15 +18,16 @@ export const twoFAValidation = async (req, res, next) => {
         return sendResponse(res, 400, validate.jsonResponse);
     }
 
+    const ipDetails = await getIpDetails(req.realIp);
     req.auth.email = validate.value.email;
     req.auth.ip = req.realIp;
-    req.auth.country = await getIpInfo(req.realIp).country;
+    req.auth.country = ipDetails.country;
     req.auth.loginMethod = req.body.method?.toUpperCase() || null;
     req.auth.refreshExpiry = setRefreshExpiry(validate.value);
     req.auth.deviceInfo = buildDeviceInfo(
         req.headers["user-agent"],
         validate.value,
-        await getIpInfo(req.realIp)
+        ipDetails
     );
     next();
 };

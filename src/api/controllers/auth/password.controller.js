@@ -10,6 +10,7 @@ import { buildDeviceInfo } from "../../../helpers/buildDeviceInfo.js";
 
 import { getSession, setSession } from "../../../services/session.service.js";
 import { findUser, updateUser } from "../../../services/user.service.js";
+import { createAuthEvent } from "../../../services/authEvent.service.js";
 import { getRiskScore } from "../../../utils/security/riskEngine.js";
 
 import {
@@ -110,7 +111,7 @@ export const forgotPasswordHandler = async (req, res) => {
         const token = crypto
             .randomBytes(Number(process.env.BYTE))
             .toString("hex");
-        const link = `${process.extra.DOMAIN_LINK}/auth/reset-password/${token}`;
+        const link = `${process.env.DOMAIN_LINK}/auth/reset-password/${token}`;
 
         const hashedToken = crypto
             .createHash("sha256")

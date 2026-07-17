@@ -18,34 +18,36 @@ export const signupValidation = async (req, res, next) => {
     return sendResponse(res, 400, validate.jsonResponse);
   }
 
-  const emailExist = await findUser({
-    email: req.body.email,
+  const existingUser = await findUser({
+    $or: [{ email: req.body.email }, { username: req.body.username }],
   });
 
-  if (emailExist && emailExist.username === req.body.username) {
-    return sendResponse(res, 401, {
-      message: `${emailExist.email} email && ${emailExist.username} is already taken use different email && username to signup`,
-    });
-  } else if (emailExist) {
-    return sendResponse(res, 401, {
-      message: `${req.body.email} email is already taken use different email to signup`,
-    });
-  }
+  if (existingUser) {
+    const emailTaken = existingUser.email === req.body.email;
+    const usernameTaken = existingUser.username === req.body.username;
 
-  const usernameExist = await findUser({
-    username: req.body.username,
-  });
+    if (emailTaken && usernameTaken) {
+      return sendResponse(res, 401, {
+        message: `${req.body.email} email && ${req.body.username} username are already taken`,
+      });
+    }
 
-  if (usernameExist) {
-    return sendResponse(res, 401, {
-      message: `${usernameExist.username} username is already taken use different username to signup`,
-    });
+    if (emailTaken) {
+      return sendResponse(res, 401, {
+        message: `${req.body.email} email is already taken`,
+      });
+    }
+
+    if (usernameTaken) {
+      return sendResponse(res, 401, {
+        message: `${req.body.username} username is already taken`,
+      });
+    }
   }
 
   if (req.body.email === process.env.ADMIN_MAIL) {
     req.body.role = "admin";
   }
-
 
   return next();
 };

@@ -79,7 +79,8 @@ export const validateBasicInfo = (req, res, next) => {
       return sendResponse(res, 400, "Device size is required (width + height)");
     }
 
-    if (deviceSize <= 170 && deviceSize >= 4000) {
+  
+    if (deviceSize <= 170 || deviceSize >= 4000) {
       return sendResponse(res, 400, "Device size is out of allowed range");
     }
 
@@ -108,7 +109,7 @@ export const validateBasicInfo = (req, res, next) => {
     return sendResponse(res, 400, "Device size is required (width + height)");
   }
 
-  if (devicesize >= 170 && devicesize <= 3000) {
+  if (devicesize <= 170 || devicesize >= 4000) {
     return sendResponse(res, 400, "Device size is out of allowed range");
   }
 
