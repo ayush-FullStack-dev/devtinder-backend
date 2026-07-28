@@ -83,7 +83,10 @@ export const verifyLoginHandler = async (req, res) => {
 
   const methods = collectOnMethod(user.twoFA.twoFAMethods);
 
-  if (verify?.success === undefined && !allowedMethod.includes(verify?.method)) {
+  if (
+    verify?.success === undefined &&
+    !allowedMethod.includes(verify?.method)
+  ) {
     return sendResponse(res, 401, {
       message: "no method provided to verify",
       code: "METHOD_NOT_FOUND",
@@ -116,7 +119,11 @@ export const verifyLoginHandler = async (req, res) => {
     });
   }
 
-  if (verify?.stepup && user.twoFA.enabled && !["passkey"].includes(verify?.method)) {
+  if (
+    verify?.stepup &&
+    user.twoFA.enabled &&
+    !["passkey"].includes(verify?.method)
+  ) {
     const data = await setTwoFa(ctxId, userInfo, methods);
     user.twoFA.tokenInfo.push(data.info);
 
@@ -124,7 +131,11 @@ export const verifyLoginHandler = async (req, res) => {
       user.twoFA.tokenInfo.shift();
     }
 
-    await updateUser(user._id, { "twoFA.tokenInfo": user.twoFA.tokenInfo }, { id: true });
+    await updateUser(
+      user._id,
+      { "twoFA.tokenInfo": user.twoFA.tokenInfo },
+      { id: true },
+    );
 
     return res
       .status(401)
@@ -133,14 +144,15 @@ export const verifyLoginHandler = async (req, res) => {
       .json(data.response);
   }
 
-  const { accessToken, refreshToken, trustedSession, updatedUser } = await issueTokens({
-    user,
-    deviceInfo,
-    verify,
-    info,
-    refreshExpiry,
-    userInfo,
-  });
+  const { accessToken, refreshToken, trustedSession, updatedUser } =
+    await issueTokens({
+      user,
+      deviceInfo,
+      verify,
+      info,
+      refreshExpiry,
+      userInfo,
+    });
 
   // server-side call (e.g. autoLogin after signup)
   if (req.auth.type === "server") {
@@ -160,8 +172,13 @@ export const verifyLoginHandler = async (req, res) => {
   return res
     .status(200)
     .clearCookie("login_ctx", cookieOption)
+    .clearCookie("approvalId", cookieOption)
     .cookie("accessToken", accessToken, accessTokenCookieOption)
-    .cookie("refreshToken", refreshToken, refreshTokenCookieOption(refreshExpiry.ms))
+    .cookie(
+      "refreshToken",
+      refreshToken,
+      refreshTokenCookieOption(refreshExpiry.ms),
+    )
     .cookie("trustedSession", trustedSession, trustedSessionCookieOption)
     .json({
       success: true,

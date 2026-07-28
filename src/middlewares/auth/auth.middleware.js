@@ -58,7 +58,7 @@ export const findLoginData = async (req, res, next) => {
 
 export const validateBasicInfo = (req, res, next) => {
   if (req?.body) {
-    const { clientTimestamp, deviceId, deviceSize } = req.body;
+    const { clientTimestamp = new Date(), deviceId, deviceSize } = req.body;
 
     if (!clientTimestamp) {
       return sendResponse(res, 400, {

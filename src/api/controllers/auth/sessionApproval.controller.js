@@ -11,7 +11,7 @@ export const sessionApprovealHandler = async (req, res) => {
   const authIO = getAuthIO();
   const room = `approval:${req.params.id}`;
 
-  if (!approval) {
+  if (!approval || approval?.expiredAt < new Date()) {
     return sendResponse(
       res,
       410,
@@ -32,14 +32,6 @@ export const sessionApprovealHandler = async (req, res) => {
       res,
       410,
       "This request has already been processed and can no longer be used.",
-    );
-  }
-
-  if (approval.expiredAt < new Date()) {
-    return sendResponse(
-      res,
-      410,
-      "This login approval request has expired or is no longer valid.",
     );
   }
 
