@@ -369,6 +369,7 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
         success: true,
         code: "SESSION_APPROVAL_REQUESTED",
         timeout: response.timeout,
+        approvalId: response.approvalId,
         message: "Session approval request send successfully",
       });
   }
@@ -379,7 +380,6 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
       message: "Waiting for approval...",
     });
   }
-
 
   req.auth.verify = checkSessionApproval(approval, info);
 

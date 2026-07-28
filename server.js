@@ -11,15 +11,17 @@ import chalk, {
   printASCII,
   errorLog,
   success,
-  info
+  info,
 } from "./logs/printLogs.js";
+import { registerAuthSocket } from "./src/api/socket/auth.socket.js";
 
 // configure server
 const server = http.createServer(app);
 const port = process.env.PORT || 3000;
 
 function startSocket() {
-  const { callIO, chatIO } = initSocket(server);
+  const { callIO, chatIO, authIO } = initSocket(server);
+  registerAuthSocket(authIO);
   registerChatSocket(chatIO);
   registerCallSocket(callIO);
 }

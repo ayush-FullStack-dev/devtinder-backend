@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { setSession, getSession } from "../../services/session.service.js";
 import { findPushSubscription } from "../../services/pushSubscription.service.js";
 import { sendNotification } from "../../notifications/sendNotification.js";
+import { getAuthIO } from "../../../socket.js";
 
 const normalizeDeviceInfo = (deviceInfo) => ({
   ...(deviceInfo || {}),
@@ -16,19 +17,40 @@ export const sendSessionApproval = async (deviceInfo, user) => {
   const normalizedDeviceInfo = normalizeDeviceInfo(deviceInfo);
   const timeout = 120;
 
+  const authIO = getAuthIO();
+
   await setSession(
     {
       userId: user._id,
       status: "pending",
       device: normalizedDeviceInfo,
       requestedAt: new Date(),
+      expiredAt: new Date(Date.now() + timeout * 1000),
       used: false,
     },
     approvalId,
     `session:approval`,
     "EX",
-    timeout,
+    timeout + 5,
   );
+
+  setTimeout(async () => {
+    const room = `approval:${approvalId}`;
+    const approval = await getSession(`session:approval:${approvalId}`);
+
+    if (approval && approval.status === "pending" && !approval.used) {
+      authIO.to(room).emit("approval:update", {
+        approvalId,
+        status: "expired",
+      });
+
+      const sockets = await authIO.in(room).fetchSockets();
+
+      for (const socket of sockets) {
+        socket.disconnect(true);
+      }
+    }
+  }, timeout * 1000);
 
   const trustedDevices = Array.isArray(user?.trustedDevices)
     ? user.trustedDevices

@@ -189,13 +189,3 @@ Sensitive files:
 ## License
 
 - ISC (as declared in `package.json`)
-
----
-
-If you'd like, I can now:
-
-- add a `.env.example` file
-- scaffold unit tests for core services
-- create a `Dockerfile` and `docker-compose.yml` for local development
-
-Tell me which you'd prefer next.

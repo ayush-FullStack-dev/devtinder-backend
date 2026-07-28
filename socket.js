@@ -5,28 +5,36 @@ import { findSocketAuthInfo } from "./src/middlewares/socket/findSocketAuthInfo.
 import { socketProfile } from "./src/middlewares/socket/socketProfile.middleware.js";
 
 let io;
+let authIO;
+let chatIO;
+let callIO;
 
-export const initSocket = server => {
-    io = new Server(server, {
-        cors: { origin: "*", methods: ["GET", "POST"] }
-    });
+export const initSocket = (server) => {
+  io = new Server(server, {
+    cors: { origin: "*", methods: ["GET", "POST"] },
+  });
 
-    const chatIO = io.of("/chat");
-    const callIO = io.of("/call");
+  authIO = io.of("/auth");
+  chatIO = io.of("/chat");
+  callIO = io.of("/call");
 
-    chatIO.use(socketAuth);
-    chatIO.use(findSocketAuthInfo);
-    chatIO.use(socketProfile);
+  chatIO.use(socketAuth);
+  chatIO.use(findSocketAuthInfo);
+  chatIO.use(socketProfile);
 
-    callIO.use(socketAuth);
-    callIO.use(findSocketAuthInfo);
-    callIO.use(socketProfile);
+  callIO.use(socketAuth);
+  callIO.use(findSocketAuthInfo);
+  callIO.use(socketProfile);
 
-    
-    return { io, chatIO, callIO };
+  return { io, chatIO, callIO, authIO };
 };
 
 export const getIO = () => {
-    if (!io) throw new Error("Socket.io not initialized");
-    return io;
+  if (!io) throw new Error("Socket.io not initialized");
+  return io;
+};
+
+export const getAuthIO = () => {
+  if (!authIO) throw new Error("Auth namespace not initialized");
+  return authIO;
 };
