@@ -3,6 +3,10 @@ const base = {
   signed: true,
   sameSite: process.env.NODE_ENV === "production" ? "none" : "Lax",
   secure: process.env.NODE_ENV === "production",
+  domain:
+    process.env.NODE_ENV === "production"
+      ? `.${process.env.DOMAIN}`
+      : process.env.DOMAIN,
 };
 
 export const cookieOption = base;
