@@ -14,6 +14,7 @@ server.js
 ```
 
 **Boot order** (`server.js`):
+
 1. `http.createServer(app)` — Express app wrapped in HTTP server
 2. `initSocket(server)` — creates `Server`, two namespaces, attaches middleware
 3. `registerChatSocket(chatIO)` / `registerCallSocket(callIO)` — bind all event handlers
@@ -26,6 +27,7 @@ server.js
 Every socket connection passes through **3 middleware layers** in order:
 
 ### 1. `socketAuth` — JWT / Cookie verification
+
 **File:** `src/middlewares/socket/socketAuth.middleware.js`
 
 - Reads `cookie` header from handshake
@@ -35,6 +37,7 @@ Every socket connection passes through **3 middleware layers** in order:
 - Rejects with `403` if missing/invalid
 
 ### 2. `findSocketAuthInfo` — Load User document
+
 **File:** `src/middlewares/socket/findSocketAuthInfo.middleware.js`
 
 - Uses `socket.user.auth._id` to call `findUser({ _id })`
@@ -42,6 +45,7 @@ Every socket connection passes through **3 middleware layers** in order:
 - Rejects with `403 ACCOUNT_DISABLED` if user not found
 
 ### 3. `socketProfile` — Load Profile document
+
 **File:** `src/middlewares/socket/socketProfile.middleware.js`
 
 - Loads profile via `findProfile({ userId: decoded._id })`
@@ -49,6 +53,7 @@ Every socket connection passes through **3 middleware layers** in order:
 - Sets `socket.user.currentProfile = profile`
 
 After all 3 pass, `socket.user` shape is:
+
 ```js
 socket.user = {
   auth: { _id, ... },       // JWT payload
@@ -65,14 +70,14 @@ socket.user = {
 ```js
 import { io } from "socket.io-client";
 
-const BASE = "https://api-devtinder.onrender.com";
+const BASE = "https://api.devtinder.tech";
 
 // Auth is via httpOnly signed cookie — no manual token needed in auth{}
 // The cookie is sent automatically by the browser on same-origin or with credentials
 
 const chatSocket = io(`${BASE}/chat`, {
   path: "/socket.io",
-  withCredentials: true,       // sends cookies
+  withCredentials: true, // sends cookies
   transports: ["websocket"],
   reconnection: true,
   reconnectionDelay: 1000,
@@ -92,10 +97,10 @@ const callSocket = io(`${BASE}/call`, {
 
 ## Namespaces
 
-| Namespace | Purpose                                      | File                        |
-|-----------|----------------------------------------------|-----------------------------|
-| `/chat`   | Messaging, presence, typing, reactions, edit | `chat.socket.js`            |
-| `/call`   | Voice/video call signaling, WebRTC, controls | `call.socket.js`            |
+| Namespace | Purpose                                      | File             |
+| --------- | -------------------------------------------- | ---------------- |
+| `/chat`   | Messaging, presence, typing, reactions, edit | `chat.socket.js` |
+| `/call`   | Voice/video call signaling, WebRTC, controls | `call.socket.js` |
 
 ---
 
@@ -104,6 +109,7 @@ const callSocket = io(`${BASE}/call`, {
 ### Connection Flow
 
 On connect, the server automatically:
+
 1. Joins socket to `user:<profileId>` room (for DM-level events)
 2. Calls `globalOnline(socket)` — emits `chat:online` to all chat opponents
 
@@ -116,11 +122,13 @@ Client connects → server joins user:<id> room → broadcasts online status
 ### Global Events (no `chat:join` required)
 
 #### `chat:syncPresence` → server
+
 Sync online/offline status of all chat opponents at once.
 
 **Payload:** none (or empty object)
 
 **Ack response:**
+
 ```json
 {
   "success": true,
@@ -140,17 +148,21 @@ Sync online/offline status of all chat opponents at once.
 ```
 
 #### `chat:list:typing` → server
+
 Broadcast typing indicator to all chat list opponents (global, not per-chat).
 
 **Payload:** none
 
 **Server emits to each opponent's `user:<id>` room:**
+
 ```json
 { "chatId": "<chatId>", "typing": true }
 ```
+
 Event name: `chat:list:typing`
 
 #### `chat:list:stopTyping` → server
+
 Stop global typing indicator.
 
 **Server emits:** `chat:list:stopTyping` → `{ "chatId": "<chatId>", "typing": false }`
@@ -162,16 +174,19 @@ Stop global typing indicator.
 Must be called before any per-chat events. Validates membership and chat status.
 
 **Payload:**
+
 ```json
 { "chatId": "<mongoId>" }
 ```
 
 **Ack success:**
+
 ```json
 { "success": true, "message": "Joined chat" }
 ```
 
 **Ack failure:**
+
 ```json
 {
   "success": false,
@@ -181,6 +196,7 @@ Must be called before any per-chat events. Validates membership and chat status.
 ```
 
 After joining, the socket:
+
 - Joins `chat:<chatId>` room
 - Calls `syncChatInfos` — marks undelivered messages as delivered, emits `chat:update` with `MESSAGE_DELIVERED`
 - Registers all per-chat event handlers below
@@ -192,6 +208,7 @@ After joining, the socket:
 #### `chat:send` → server — Send a message
 
 **Payload:**
+
 ```json
 {
   "type": "text | media",
@@ -214,17 +231,26 @@ After joining, the socket:
 ```
 
 **Ack success:**
+
 ```json
 { "success": true, "message": "Message sent" }
 ```
 
 **Server emits to opponent's `user:<id>` room:**
+
 ```json
 // chat:list:update
 {
   "type": "MESSAGE_SEND",
   "chatId": "<chatId>",
-  "lastMessage": { "type": "text", "text": "Hello!", "senderId": "<id>", "messageId": "<id>", "sentAt": "<iso>", "status": "sent|delivered" },
+  "lastMessage": {
+    "type": "text",
+    "text": "Hello!",
+    "senderId": "<id>",
+    "messageId": "<id>",
+    "sentAt": "<iso>",
+    "status": "sent|delivered"
+  },
   "lastMessageAt": "<iso>",
   "moveToTop": true,
   "unreadCount": 3,
@@ -233,20 +259,33 @@ After joining, the socket:
 ```
 
 **Server emits to sender's `user:<id>` room:**
+
 ```json
 // chat:list:update  (same shape, sender: "me", unreadCount: 0)
 ```
 
 **Server emits to `chat:<chatId>` room (opponent):**
+
 ```json
 // chat:newMessage
-{ "success": true, "data": { /* full message payload */ } }
+{
+  "success": true,
+  "data": {
+    /* full message payload */
+  }
+}
 ```
 
 **Server emits to sender socket:**
+
 ```json
 // chat:messageSent
-{ "success": true, "data": { /* full message payload */ } }
+{
+  "success": true,
+  "data": {
+    /* full message payload */
+  }
+}
 ```
 
 Push notification sent to opponent if not muted.
@@ -258,6 +297,7 @@ Push notification sent to opponent if not muted.
 **Payload:** none (reads all unread messages in current chat)
 
 **Ack response:**
+
 ```json
 {
   "success": true,
@@ -268,6 +308,7 @@ Push notification sent to opponent if not muted.
 ```
 
 **Server emits to `chat:<chatId>` (opponent):**
+
 ```json
 // chat:update
 {
@@ -279,6 +320,7 @@ Push notification sent to opponent if not muted.
 ```
 
 **Server emits to `user:<myId>` room:**
+
 ```json
 // chat:list:update  (unreadCount reset to 0)
 ```
@@ -288,11 +330,13 @@ Push notification sent to opponent if not muted.
 #### `chat:deleteMessage` → server — Delete a message
 
 **Payload:**
+
 ```json
 { "messageId": "<mongoId>", "mode": "me | everyone" }
 ```
 
 Rules:
+
 - `mode: "everyone"` — only sender can use; deletes media from S3; sets `deletedForEveryoneAt`
 - `mode: "me"` — hides only for current user; updates last message in chat list if needed
 - System messages cannot be deleted for everyone
@@ -302,6 +346,7 @@ Rules:
 **Ack failure codes:** `INVALID_MESSAGE_ID`, `INVALID_DELETE_MODE`, `NOT_FOUND`, `MESSAGE_ALREADY_DELETED`, `DELETE_NOT_ALLOWED`
 
 **Server emits to `chat:<chatId>`:**
+
 ```json
 // chat:message:update
 {
@@ -319,6 +364,7 @@ Rules:
 **Payload:** none
 
 **Server emits to `chat:<chatId>` (opponent):**
+
 ```json
 // chat:typing
 { "chatId": "<chatId>", "typing": true }
@@ -333,6 +379,7 @@ Rules:
 #### `chat:message:react` → server — React to a message
 
 **Payload:**
+
 ```json
 { "messageId": "<mongoId>", "emoji": "❤️" }
 ```
@@ -344,6 +391,7 @@ Rules:
 | Silver / Gold (premium active) | 3 |
 
 **Ack failure (limit reached):**
+
 ```json
 {
   "success": false,
@@ -355,12 +403,15 @@ Rules:
 ```
 
 **Server emits to `chat:<chatId>`:**
+
 ```json
 // chat:message:update
 {
   "type": "MESSAGE_REACTED",
   "messageId": "<id>",
-  "reaction": { /* per-user reaction map */ }
+  "reaction": {
+    /* per-user reaction map */
+  }
 }
 ```
 
@@ -369,14 +420,17 @@ Rules:
 #### `chat:message:unreact` → server — Remove reaction
 
 **Payload:**
+
 ```json
 { "messageId": "<mongoId>", "emoji": "❤️" }
 ```
+
 `emoji` is optional if user has only 1 reaction; required if multiple.
 
 **Ack failure codes:** `REACTION_NOT_FOUND`, `EMOJI_REQUIRED`, `VALIDATION_ERROR`
 
 **Server emits to `chat:<chatId>`:**
+
 ```json
 // chat:message:update
 { "type": "MESSAGE_UNREACTED", "messageId": "<id>", "reaction": { ... } }
@@ -387,11 +441,13 @@ Rules:
 #### `chat:message:edit` → server — Edit a message
 
 **Payload:**
+
 ```json
 { "messageId": "<mongoId>", "text": "Updated text" }
 ```
 
 Rules:
+
 - Only sender can edit
 - Only `type: "text"` messages
 - Edit window: **15 minutes** from `createdAt`
@@ -400,9 +456,16 @@ Rules:
 **Ack failure codes:** `NOT_FOUND`, `MESSAGE_NOT_EDITABLE`, `EDIT_NOT_ALLOWED`, `EDIT_TIME_EXPIRED`
 
 **Server emits to `chat:<chatId>`:**
+
 ```json
 // chat:message:update
-{ "success": true, "type": "MESSAGE_EDITED", "data": { /* full message payload */ } }
+{
+  "success": true,
+  "type": "MESSAGE_EDITED",
+  "data": {
+    /* full message payload */
+  }
+}
 ```
 
 If edited message is the last message, also emits `chat:list:update` with `type: "MESSAGE_EDITED"` to both users.
@@ -411,18 +474,18 @@ If edited message is the last message, also emits `chat:list:update` with `type:
 
 ### Server → Client Events (chat namespace)
 
-| Event | Emitted to | Description |
-|-------|-----------|-------------|
-| `chat:online` | `user:<opponentId>` | Opponent came online `{ chat, online: true }` |
-| `chat:offline` | `user:<opponentId>` | Opponent went offline `{ chat, online: false, lastSeen }` |
-| `chat:newMessage` | `chat:<chatId>` | New message received `{ success, data }` |
-| `chat:messageSent` | sender socket | Confirmation of own sent message |
-| `chat:update` | `chat:<chatId>` | `MESSAGE_READ` or `MESSAGE_DELIVERED` bulk update |
-| `chat:message:update` | `chat:<chatId>` | Single message mutation (delete/react/edit) |
-| `chat:list:update` | `user:<id>` | Chat list item update (last message, unread count) |
-| `chat:list:typing` | `user:<opponentId>` | Global typing in chat list |
-| `chat:list:stopTyping` | `user:<opponentId>` | Global stop typing |
-| `chat:typing` | `chat:<chatId>` | Per-chat typing indicator |
+| Event                  | Emitted to          | Description                                               |
+| ---------------------- | ------------------- | --------------------------------------------------------- |
+| `chat:online`          | `user:<opponentId>` | Opponent came online `{ chat, online: true }`             |
+| `chat:offline`         | `user:<opponentId>` | Opponent went offline `{ chat, online: false, lastSeen }` |
+| `chat:newMessage`      | `chat:<chatId>`     | New message received `{ success, data }`                  |
+| `chat:messageSent`     | sender socket       | Confirmation of own sent message                          |
+| `chat:update`          | `chat:<chatId>`     | `MESSAGE_READ` or `MESSAGE_DELIVERED` bulk update         |
+| `chat:message:update`  | `chat:<chatId>`     | Single message mutation (delete/react/edit)               |
+| `chat:list:update`     | `user:<id>`         | Chat list item update (last message, unread count)        |
+| `chat:list:typing`     | `user:<opponentId>` | Global typing in chat list                                |
+| `chat:list:stopTyping` | `user:<opponentId>` | Global stop typing                                        |
+| `chat:typing`          | `chat:<chatId>`     | Per-chat typing indicator                                 |
 
 ---
 
@@ -431,6 +494,7 @@ If edited message is the last message, also emits `chat:list:update` with `type:
 ### Connection Flow
 
 On connect:
+
 1. Joins `user:<profileId>` room
 2. `syncActiveCalls(socket)` runs via `process.nextTick` — re-delivers any pending `call:incoming` to reconnected clients
 
@@ -439,6 +503,7 @@ On connect:
 ### Global Call Events (no `call:join` required)
 
 #### `call:sync` → server
+
 Manually trigger sync of active incoming calls (e.g. after app foreground).
 
 **Payload:** none
@@ -450,6 +515,7 @@ Manually trigger sync of active incoming calls (e.g. after app foreground).
 #### `call:switch` → server — Switch between two active calls
 
 **Payload:**
+
 ```json
 { "toCallId": "<callId>" }
 ```
@@ -465,6 +531,7 @@ Ends current active call (`socket.data.callId`) then accepts `toCallId`.
 Must be called before voice/video events. Validates chat membership.
 
 **Payload:**
+
 ```json
 { "chatId": "<mongoId>" }
 ```
@@ -477,9 +544,10 @@ Must be called before voice/video events. Validates chat membership.
 
 #### `call:voice:start` → server — Initiate voice call
 
-**Payload:** `{ "chatId": "<chatId>" }` *(chatId already set via call:join)*
+**Payload:** `{ "chatId": "<chatId>" }` _(chatId already set via call:join)_
 
 **Ack success:**
+
 ```json
 {
   "success": true,
@@ -495,6 +563,7 @@ Must be called before voice/video events. Validates chat membership.
 ```
 
 **Server emits to opponent `user:<id>`:**
+
 ```json
 // call:incoming
 {
@@ -512,6 +581,7 @@ Must be called before voice/video events. Validates chat membership.
 - Auto-cleanup after timeout → emits `call:missed` to both parties
 
 #### `call:video:start` → server — Initiate video call
+
 Same as voice, `type: "video"`.
 
 ---
@@ -521,6 +591,7 @@ Same as voice, `type: "video"`.
 **Payload:** `{ "callId": "<id>" }`
 
 **Ack success:**
+
 ```json
 {
   "success": true,
@@ -536,6 +607,7 @@ Same as voice, `type: "video"`.
 ```
 
 **Server emits to caller `user:<id>`:**
+
 ```json
 // call:accepted
 {
@@ -547,6 +619,7 @@ Same as voice, `type: "video"`.
 ```
 
 **Server emits to other devices of receiver:**
+
 ```json
 // call:picked  → { "callId": "<id>", "picked": true }
 ```
@@ -580,6 +653,7 @@ Creates missed call system message. Sends push notification.
 **Payload:** `{ "callId": "<id>", "reason": "hangup | network | ..." }`
 
 **Server emits to `call:<callId>` room:**
+
 ```json
 // call:ended
 { "callId": "<id>", "by": "<profileId>", "duration": 142 }
@@ -592,11 +666,14 @@ Creates ended call system message in `/chat` namespace.
 #### `call:signal` → server — WebRTC signaling
 
 **Payload:**
+
 ```json
 {
   "callId": "<id>",
   "type": "offer | answer | ice | ice-batch",
-  "data": { /* SDP or ICE candidate */ }
+  "data": {
+    /* SDP or ICE candidate */
+  }
 }
 ```
 
@@ -608,9 +685,10 @@ Creates ended call system message in `/chat` namespace.
 
 #### `call:mute` → server — Toggle mute
 
-**Payload:** `{ "callId": "<id>" }` *(toggles current state)*
+**Payload:** `{ "callId": "<id>" }` _(toggles current state)_
 
 **Server emits to `call:<callId>` room:**
+
 ```json
 // call:mute-toggled
 { "userId": "<id>", "isMuted": true }
@@ -631,6 +709,7 @@ Creates ended call system message in `/chat` namespace.
 **Payload:** `{ "callId": "<id>" }`
 
 **Server emits to `call:<callId>` room:**
+
 ```json
 // call:hold
 { "userId": "<id>", "tone": "<hold-tone-url>", "playTone": true }
@@ -645,11 +724,18 @@ Creates ended call system message in `/chat` namespace.
 #### `call:quality` → server — Report network quality
 
 **Payload:**
+
 ```json
-{ "callId": "<id>", "level": "good | poor | lost", "rtt": 45, "packetLoss": 0.02 }
+{
+  "callId": "<id>",
+  "level": "good | poor | lost",
+  "rtt": 45,
+  "packetLoss": 0.02
+}
 ```
 
 **Server emits to `call:<callId>` room:**
+
 ```json
 // call:peer:quality
 { "userId": "<id>", "quality": "poor", "rtt": 45, "packetLoss": 0.02 }
@@ -660,14 +746,27 @@ Creates ended call system message in `/chat` namespace.
 #### `call:media:change` → server — Switch media type
 
 **Payload:**
+
 ```json
-{ "callId": "<id>", "from": "voice | video | screen", "to": "voice | video | screen", "reason": "manual" }
+{
+  "callId": "<id>",
+  "from": "voice | video | screen",
+  "to": "voice | video | screen",
+  "reason": "manual"
+}
 ```
 
 **Server emits to `call:<callId>` room:**
+
 ```json
 // call:media:changed
-{ "by": "<id>", "from": "voice", "to": "video", "reason": "manual", "at": "<iso>" }
+{
+  "by": "<id>",
+  "from": "voice",
+  "to": "video",
+  "reason": "manual",
+  "at": "<iso>"
+}
 ```
 
 ---
@@ -677,6 +776,7 @@ Creates ended call system message in `/chat` namespace.
 **Payload:** `{ "callId": "<id>" }`
 
 **Ack success:**
+
 ```json
 {
   "success": true,
@@ -689,6 +789,7 @@ Creates ended call system message in `/chat` namespace.
 **Ack failure codes:** `CALL_NOT_FOUND`, `CALL_ROOM_FULL` (multi-device limit)
 
 **Server emits to `call:<callId>` room:**
+
 ```json
 // call:peer:reconnected
 { "callId", "userId", "role": "caller | receiver", "at", "resume": true }
@@ -698,47 +799,51 @@ Creates ended call system message in `/chat` namespace.
 
 ### Server → Client Events (call namespace)
 
-| Event | Emitted to | Description |
-|-------|-----------|-------------|
-| `call:incoming` | `user:<receiverId>` | Incoming call notification |
-| `call:accepted` | `user:<callerId>` | Receiver accepted |
-| `call:rejected` | `user:<callerId>` | Receiver rejected |
-| `call:cancelled` | `user:<receiverId>` | Caller cancelled |
-| `call:missed` | both `user:<id>` rooms | Timeout — call missed |
-| `call:ended` | `call:<callId>` room | Call ended |
-| `call:picked` | other devices of receiver | Call answered on another device |
-| `call:updated` | `user:<callerId>` | Status update (e.g. ringing) |
-| `call:signal` | `call:<callId>` or `user:<id>` | WebRTC SDP/ICE relay |
-| `call:mute-toggled` | `call:<callId>` | Mute state changed |
-| `call:video-toggled` | `call:<callId>` | Video state changed |
-| `call:hold` | `call:<callId>` | Call put on hold |
-| `call:resume` | `call:<callId>` | Call resumed |
-| `call:peer:quality` | `call:<callId>` | Peer network quality report |
-| `call:media:changed` | `call:<callId>` | Media type switched |
-| `call:peer:disconnected` | `call:<callId>` | Peer dropped (grace period: 20s) |
-| `call:peer:reconnected` | `call:<callId>` | Peer reconnected |
-| `call:notification:dismiss` | `user:<id>` | Dismiss incoming call UI |
+| Event                       | Emitted to                     | Description                      |
+| --------------------------- | ------------------------------ | -------------------------------- |
+| `call:incoming`             | `user:<receiverId>`            | Incoming call notification       |
+| `call:accepted`             | `user:<callerId>`              | Receiver accepted                |
+| `call:rejected`             | `user:<callerId>`              | Receiver rejected                |
+| `call:cancelled`            | `user:<receiverId>`            | Caller cancelled                 |
+| `call:missed`               | both `user:<id>` rooms         | Timeout — call missed            |
+| `call:ended`                | `call:<callId>` room           | Call ended                       |
+| `call:picked`               | other devices of receiver      | Call answered on another device  |
+| `call:updated`              | `user:<callerId>`              | Status update (e.g. ringing)     |
+| `call:signal`               | `call:<callId>` or `user:<id>` | WebRTC SDP/ICE relay             |
+| `call:mute-toggled`         | `call:<callId>`                | Mute state changed               |
+| `call:video-toggled`        | `call:<callId>`                | Video state changed              |
+| `call:hold`                 | `call:<callId>`                | Call put on hold                 |
+| `call:resume`               | `call:<callId>`                | Call resumed                     |
+| `call:peer:quality`         | `call:<callId>`                | Peer network quality report      |
+| `call:media:changed`        | `call:<callId>`                | Media type switched              |
+| `call:peer:disconnected`    | `call:<callId>`                | Peer dropped (grace period: 20s) |
+| `call:peer:reconnected`     | `call:<callId>`                | Peer reconnected                 |
+| `call:notification:dismiss` | `user:<id>`                    | Dismiss incoming call UI         |
 
 ---
 
 ## Premium Features & Tier Gating
 
-| Feature | Free | Silver | Gold |
-|---------|------|--------|------|
-| Message reactions per message | 1 | 3 | 3 |
-| Custom incoming ringtone | ✗ | ✓ | ✓ |
-| Custom ringback tone | ✗ | ✓ | ✓ |
-| Swipe limit (discover) | 30/day | 60/day | 60/day |
-| Profile rewinds | 5 | 10 | 10 |
+| Feature                       | Free   | Silver | Gold   |
+| ----------------------------- | ------ | ------ | ------ |
+| Message reactions per message | 1      | 3      | 3      |
+| Custom incoming ringtone      | ✗      | ✓      | ✓      |
+| Custom ringback tone          | ✗      | ✓      | ✓      |
+| Swipe limit (discover)        | 30/day | 60/day | 60/day |
+| Profile rewinds               | 5      | 10     | 10     |
 
 **How premium is checked in socket handlers:**
+
 ```js
 import { buildSubscriptionInfo } from "helpers/subscription/subscription.helper.js";
 const premium = buildSubscriptionInfo(socket.user.currentProfile.premium);
-if (!premium.isActive) { /* free tier */ }
+if (!premium.isActive) {
+  /* free tier */
+}
 ```
 
 **Reaction limit ack (frontend must handle):**
+
 ```json
 {
   "success": false,
@@ -747,6 +852,7 @@ if (!premium.isActive) { /* free tier */ }
   "action": "UPGRADE_PREMIUM"
 }
 ```
+
 Frontend: show upgrade modal when `action === "UPGRADE_PREMIUM"`.
 
 ---
@@ -754,9 +860,11 @@ Frontend: show upgrade modal when `action === "UPGRADE_PREMIUM"`.
 ## Disconnect & Reconnect Handling
 
 ### Chat namespace disconnect
+
 - `globalOffline` fires: updates `profile.lastSeen`, emits `chat:offline` to all opponents
 
 ### Call namespace disconnect
+
 - If call is `calling/ringing` and disconnected user is caller → auto `cancelCall`
 - If call is `ongoing` and call room is empty → auto `endCall`
 - If call is `ongoing` and room still has peer → 20s grace period:
@@ -765,8 +873,11 @@ Frontend: show upgrade modal when `action === "UPGRADE_PREMIUM"`.
   - Client should emit `call:reconnect` within grace period
 
 ### Client reconnect strategy
+
 ```js
-chatSocket.on("connect_error", (err) => { /* exponential backoff */ });
+chatSocket.on("connect_error", (err) => {
+  /* exponential backoff */
+});
 chatSocket.on("reconnect", () => {
   // re-emit chat:join for active chat
   // re-emit chat:syncPresence
@@ -774,7 +885,9 @@ chatSocket.on("reconnect", () => {
 callSocket.on("reconnect", () => {
   // if in active call, emit call:reconnect
   callSocket.emit("call:reconnect", { callId }, (res) => {
-    if (res.resumeWebRTC) { /* restart WebRTC peer connection */ }
+    if (res.resumeWebRTC) {
+      /* restart WebRTC peer connection */
+    }
   });
 });
 ```
@@ -783,11 +896,11 @@ callSocket.on("reconnect", () => {
 
 ## Room Naming Convention
 
-| Room | Members | Used for |
-|------|---------|---------|
-| `user:<profileId>` | All sockets of that user | DM-level events, presence, call incoming |
-| `chat:<chatId>` | Both users in a chat (after join) | Per-chat messages, typing, updates |
-| `call:<callId>` | Both users in an active call | WebRTC signals, call controls |
+| Room               | Members                           | Used for                                 |
+| ------------------ | --------------------------------- | ---------------------------------------- |
+| `user:<profileId>` | All sockets of that user          | DM-level events, presence, call incoming |
+| `chat:<chatId>`    | Both users in a chat (after join) | Per-chat messages, typing, updates       |
+| `call:<callId>`    | Both users in an active call      | WebRTC signals, call controls            |
 
 ---
 
@@ -812,37 +925,38 @@ return ack?.({ success: true, ... });
 
 ## Error Codes Reference
 
-| Code | Where | Meaning |
-|------|-------|---------|
-| `VALIDATION_ERROR` | chat | Joi validation failed |
-| `CHAT_NOT_FOUND` | chat | chatId doesn't exist |
-| `CHAT_FORBIDDEN` | chat | Not a member of this chat |
-| `CHAT_CLOSED` | chat | Chat status is not active |
-| `INVALID_CHAT_ID` | chat | Not a valid ObjectId |
-| `NOT_FOUND` | chat | Message not found |
-| `MESSAGE_ALREADY_DELETED` | chat | Already deleted |
-| `DELETE_NOT_ALLOWED` | chat | Can't delete for everyone (not sender) |
-| `REACTION_LIMIT_REACHED` | chat | Premium gate on reactions |
-| `REACTION_NOT_FOUND` | chat | No reaction to remove |
-| `EMOJI_REQUIRED` | chat | Multiple reactions, must specify emoji |
-| `MESSAGE_NOT_EDITABLE` | chat | Deleted message |
-| `EDIT_NOT_ALLOWED` | chat | Not message owner |
-| `EDIT_TIME_EXPIRED` | chat | Past 15-minute edit window |
-| `CALL_NOT_FOUND` | call | Call doesn't exist or ended |
-| `CALL_EXPIRED` | call | Call already handled/expired |
-| `CALL_ROOM_FULL` | call | Multi-device limit on reconnect |
-| `CALL_SWITCH_FAILED` | call | Could not switch calls |
-| `RECEIVER_NOT_AVAILABLE` | call | Receiver profile deleted |
-| `CALLER_NOT_AVAILABLE` | call | Caller profile deleted |
-| `LEVEL_INVALID` | call | Quality level not good/poor/lost |
-| `INVALID_MEDIA_TYPE` | call | Media not voice/video/screen |
-| `NO_MEDIA_CHANGE` | call | from === to |
+| Code                      | Where | Meaning                                |
+| ------------------------- | ----- | -------------------------------------- |
+| `VALIDATION_ERROR`        | chat  | Joi validation failed                  |
+| `CHAT_NOT_FOUND`          | chat  | chatId doesn't exist                   |
+| `CHAT_FORBIDDEN`          | chat  | Not a member of this chat              |
+| `CHAT_CLOSED`             | chat  | Chat status is not active              |
+| `INVALID_CHAT_ID`         | chat  | Not a valid ObjectId                   |
+| `NOT_FOUND`               | chat  | Message not found                      |
+| `MESSAGE_ALREADY_DELETED` | chat  | Already deleted                        |
+| `DELETE_NOT_ALLOWED`      | chat  | Can't delete for everyone (not sender) |
+| `REACTION_LIMIT_REACHED`  | chat  | Premium gate on reactions              |
+| `REACTION_NOT_FOUND`      | chat  | No reaction to remove                  |
+| `EMOJI_REQUIRED`          | chat  | Multiple reactions, must specify emoji |
+| `MESSAGE_NOT_EDITABLE`    | chat  | Deleted message                        |
+| `EDIT_NOT_ALLOWED`        | chat  | Not message owner                      |
+| `EDIT_TIME_EXPIRED`       | chat  | Past 15-minute edit window             |
+| `CALL_NOT_FOUND`          | call  | Call doesn't exist or ended            |
+| `CALL_EXPIRED`            | call  | Call already handled/expired           |
+| `CALL_ROOM_FULL`          | call  | Multi-device limit on reconnect        |
+| `CALL_SWITCH_FAILED`      | call  | Could not switch calls                 |
+| `RECEIVER_NOT_AVAILABLE`  | call  | Receiver profile deleted               |
+| `CALLER_NOT_AVAILABLE`    | call  | Caller profile deleted                 |
+| `LEVEL_INVALID`           | call  | Quality level not good/poor/lost       |
+| `INVALID_MEDIA_TYPE`      | call  | Media not voice/video/screen           |
+| `NO_MEDIA_CHANGE`         | call  | from === to                            |
 
 ---
 
 ## Frontend Integration Checklist
 
 ### Chat
+
 - [ ] Connect to `/chat` with `withCredentials: true`
 - [ ] On connect: emit `chat:syncPresence` to populate online indicators
 - [ ] Before opening a chat screen: emit `chat:join` with `chatId`, await ack
@@ -854,6 +968,7 @@ return ack?.({ success: true, ... });
 - [ ] On `REACTION_LIMIT_REACHED` ack: show upgrade modal if `action === "UPGRADE_PREMIUM"`
 
 ### Call
+
 - [ ] Connect to `/call` with `withCredentials: true`
 - [ ] On connect: server auto-syncs pending calls (no action needed)
 - [ ] Listen to `call:incoming` globally — show incoming call UI

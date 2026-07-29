@@ -6,7 +6,7 @@ import config from "../config/config.js";
 
 export const getPasskey = async (user) => {
   const options = await generateAuthenticationOptions({
-    rpID: process.env.NODE_ENV ? "dev-tinder-project.vercel.app" : "localhost",
+    rpID: process.env.NODE_ENV ? process.env.DOMAIN : "localhost",
     allowCredentials: user.loginMethods.passkeys.keys.map((k) => ({
       id: k.credentialId,
       type: "public-key",

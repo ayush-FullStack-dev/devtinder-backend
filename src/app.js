@@ -2,6 +2,7 @@ import express from "express";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import config from "./config/config.js";
 
 // crons import
 import { startSubscriptionCrons } from "./cron/subscription.cron.js";
@@ -46,7 +47,7 @@ app.use(
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://dev-tinder-project.vercel.app"],
+    origin: ["http://localhost:3000", process.env.DOMAIN_LINK],
     credentials: true,
   }),
 );
