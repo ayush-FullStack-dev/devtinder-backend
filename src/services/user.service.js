@@ -82,12 +82,16 @@ export const deletePendingUser = async (filter, option = { ...options }) => {
 };
 
 export const createOrUpdatePendingUser = async (data) => {
+  const email = data.email.trim().toLowerCase();
+  const username = data.username.trim().toLowerCase();
   return PendingUser.findOneAndUpdate(
     {
-      $or: [{ email: data.email }, { username: data.username }],
+      $or: [{ email }, { username }],
     },
     {
       ...data,
+      email,
+      username,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     },
     {

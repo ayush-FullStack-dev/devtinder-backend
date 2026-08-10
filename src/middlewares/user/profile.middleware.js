@@ -44,7 +44,7 @@ export const isProfileBlocked = async (req, res, next) => {
     const { currentProfile, logged } = req.auth;
 
     const profile = await findProfile({
-        username: req.params?.username
+        username: req.params?.username?.trim().toLowerCase()
     });
 
     if (!profile || profile?.visibility !== "public") {

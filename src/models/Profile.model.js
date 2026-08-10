@@ -82,7 +82,9 @@ const profileSchema = new mongoose.Schema(
             type: String,
             unique: true,
             required: true,
-            index: true
+            index: true,
+            lowercase: true,
+            trim: true
         },
         phone: {
             countryCode: {

@@ -28,10 +28,10 @@ export const loginIdentifyValidation = async (req, res, next) => {
     }
 
     if (email) {
-        req.auth.login = email;
+        req.auth.login = email.trim().toLowerCase();
         req.auth.fieldName = "email";
     } else {
-        req.auth.login = username;
+        req.auth.login = username.trim().toLowerCase();
         req.auth.fieldName = "username";
     }
 

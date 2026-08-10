@@ -38,7 +38,7 @@ export const verifyTwoFAValidation = async (req, res, next) => {
     }
 
     const user = await findUser({
-        email: req.body.email
+        email: req.body.email.trim().toLowerCase()
     });
 
     if (!user) {

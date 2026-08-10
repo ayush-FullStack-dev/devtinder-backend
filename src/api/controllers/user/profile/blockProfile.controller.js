@@ -7,7 +7,7 @@ import { findProfile } from "../../../../services/profile.service.js";
 export const blockUser = async (req, res) => {
     const { currentProfile } = req.auth;
     const profile = await findProfile({
-        username: req.params?.username
+        username: req.params?.username?.trim().toLowerCase()
     });
 
     if (!profile || profile?.visibility !== "public") {
@@ -38,7 +38,7 @@ export const blockUser = async (req, res) => {
 export const unblockUser = async (req, res) => {
     const { currentProfile } = req.auth;
     const profile = await findProfile({
-        username: req.params?.username
+        username: req.params?.username?.trim().toLowerCase()
     });
 
     if (!profile || profile?.visibility !== "public") {

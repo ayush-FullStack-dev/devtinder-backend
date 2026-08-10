@@ -19,12 +19,12 @@ export const signupValidation = async (req, res, next) => {
   }
 
   const existingUser = await findUser({
-    $or: [{ email: req.body.email }, { username: req.body.username }],
+    $or: [{ email: req.body.email.trim().toLowerCase() }, { username: req.body.username.trim().toLowerCase() }],
   });
 
   if (existingUser) {
-    const emailTaken = existingUser.email === req.body.email;
-    const usernameTaken = existingUser.username === req.body.username;
+    const emailTaken = existingUser.email === req.body.email.trim().toLowerCase();
+    const usernameTaken = existingUser.username === req.body.username.trim().toLowerCase();
 
     if (emailTaken && usernameTaken) {
       return sendResponse(res, 401, {
@@ -45,7 +45,7 @@ export const signupValidation = async (req, res, next) => {
     }
   }
 
-  if (req.body.email === process.env.ADMIN_MAIL) {
+  if (req.body.email.trim().toLowerCase() === process.env.ADMIN_MAIL) {
     req.body.role = "admin";
   }
 

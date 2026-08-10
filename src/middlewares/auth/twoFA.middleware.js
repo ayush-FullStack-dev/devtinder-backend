@@ -19,7 +19,7 @@ export const twoFAValidation = async (req, res, next) => {
     }
 
     const ipDetails = await getIpDetails(req.realIp);
-    req.auth.email = validate.value.email;
+    req.auth.email = validate.value.email.trim().toLowerCase();
     req.auth.ip = req.realIp;
     req.auth.country = ipDetails.country;
     req.auth.loginMethod = req.body.method?.toUpperCase() || null;

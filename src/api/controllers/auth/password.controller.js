@@ -104,7 +104,7 @@ export const forgotPasswordHandler = async (req, res) => {
     }
 
     const user = await findUser({
-        email
+        email: email.trim().toLowerCase()
     });
 
     if (user) {
