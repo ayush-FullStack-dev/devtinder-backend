@@ -1,8 +1,53 @@
 import geoip from "geoip-lite";
 import axios from "axios";
-import redis from "../config/redis.js";
 
 export const defaultIp = "106.192.105.230";
+
+class BoundedTTLMap {
+    constructor(maxSize = 5000, defaultTtlMs = 3600000) {
+        this.maxSize = maxSize;
+        this.defaultTtlMs = defaultTtlMs;
+        this.map = new Map();
+    }
+
+    get(key) {
+        if (!this.map.has(key)) return undefined;
+        const entry = this.map.get(key);
+        if (Date.now() > entry.expiry) {
+            this.map.delete(key);
+            return undefined;
+        }
+        this.map.delete(key);
+        this.map.set(key, entry);
+        return entry.value;
+    }
+
+    set(key, value, ttlSeconds) {
+        const ttlMs = ttlSeconds ? ttlSeconds * 1000 : this.defaultTtlMs;
+        const expiry = Date.now() + ttlMs;
+
+        if (this.map.has(key)) {
+            this.map.delete(key);
+        } else if (this.map.size >= this.maxSize) {
+            let evicted = false;
+            const now = Date.now();
+            for (const [k, entry] of this.map.entries()) {
+                if (now > entry.expiry) {
+                    this.map.delete(k);
+                    evicted = true;
+                    break;
+                }
+            }
+            if (!evicted) {
+                const oldestKey = this.map.keys().next().value;
+                this.map.delete(oldestKey);
+            }
+        }
+        this.map.set(key, { value, expiry });
+    }
+}
+
+const ipGeoCache = new BoundedTTLMap(5000, 3600000);
 
 export const getAltIpDetails = ip => {
     const geo = geoip.lookup(ip);
@@ -21,9 +66,8 @@ export async function getIpDetails(ip = defaultIp) {
         ip = defaultIp;
     }
 
-    const cacheKey = `ip:geo:${ip}`;
-    const cached = await redis.get(cacheKey);
-    if (cached) return JSON.parse(cached);
+    const cached = ipGeoCache.get(ip);
+    if (cached) return cached;
 
     try {
         const { data } = await axios.get(
@@ -37,11 +81,11 @@ export async function getIpDetails(ip = defaultIp) {
             ip: data.ip,
             location: `${data?.city},${data?.country}`
         };
-        await redis.set(cacheKey, JSON.stringify(result), "EX", 3600);
+        ipGeoCache.set(ip, result, 3600);
         return result;
     } catch (error) {
         const result = getAltIpDetails(ip);
-        await redis.set(cacheKey, JSON.stringify(result), "EX", 3600);
+        ipGeoCache.set(ip, result, 3600);
         return result;
     }
 }

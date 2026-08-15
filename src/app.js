@@ -33,7 +33,14 @@ import { getPath } from "./utilities/index.js";
 const app = express();
 startSubscriptionCrons();
 
-app.set("trust proxy", true);
+const trustProxyConfig = process.env.TRUST_PROXY
+  ? (process.env.TRUST_PROXY === "true"
+      ? true
+      : process.env.TRUST_PROXY === "false"
+      ? false
+      : process.env.TRUST_PROXY)
+  : "loopback";
+app.set("trust proxy", trustProxyConfig);
 app.set("json spaces", 2);
 
 app.use(express.urlencoded({ extended: true }));
