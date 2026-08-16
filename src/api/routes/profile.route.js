@@ -14,6 +14,7 @@ import {
   checkPremiumStatus,
 } from "../../middlewares/user/premium.middleware.js";
 import { rateLimiter } from "../../middlewares/auth/security.middleware.js";
+import { PROFILE_LIMITS } from "../../constants/rateLimit.constant.js";
 
 import { profileSetupHandler } from "../controllers/user/profile/setupProfile.controller.js";
 import {
@@ -62,9 +63,9 @@ const router = express.Router();
 
 router.use(
   rateLimiter({
-    limit: 120,
-    window: 5,
-    block: 5,
+    limit: PROFILE_LIMITS["profile:base"].maxRequests,
+    window: PROFILE_LIMITS["profile:base"].windowMinutes,
+    block: PROFILE_LIMITS["profile:base"].blockMinutes,
     route: "profile:base",
   }),
 );
@@ -83,9 +84,9 @@ router
   .patch(updateProfileInfo)
   .delete(
     rateLimiter({
-      limit: 3,
-      window: 60,
-      block: 30,
+      limit: PROFILE_LIMITS["profile:delete"].maxRequests,
+      window: PROFILE_LIMITS["profile:delete"].windowMinutes,
+      block: PROFILE_LIMITS["profile:delete"].blockMinutes,
       route: "profile:delete",
     }),
     deleteProfile,
@@ -97,18 +98,18 @@ router
   .get(getPhotos)
   .post(
     rateLimiter({
-      limit: 20,
-      window: 5,
-      block: 5,
+      limit: PROFILE_LIMITS["profile:photo:upload"].maxRequests,
+      window: PROFILE_LIMITS["profile:photo:upload"].windowMinutes,
+      block: PROFILE_LIMITS["profile:photo:upload"].blockMinutes,
       route: "profile:photo:upload",
     }),
     uploadPhoto,
   )
   .patch(
     rateLimiter({
-      limit: 10,
-      window: 5,
-      block: 5,
+      limit: PROFILE_LIMITS["profile:photo:replace"].maxRequests,
+      window: PROFILE_LIMITS["profile:photo:replace"].windowMinutes,
+      block: PROFILE_LIMITS["profile:photo:replace"].blockMinutes,
       route: "profile:photo:replace",
     }),
     replacePrimaryPhoto,
@@ -117,9 +118,9 @@ router
 router.delete(
   "/photo/:photoId",
   rateLimiter({
-    limit: 20,
-    window: 5,
-    block: 5,
+    limit: PROFILE_LIMITS["profile:photo:delete"].maxRequests,
+    window: PROFILE_LIMITS["profile:photo:delete"].windowMinutes,
+    block: PROFILE_LIMITS["profile:photo:delete"].blockMinutes,
     route: "profile:photo:delete",
   }),
   deletePhoto,
@@ -130,9 +131,9 @@ router.get("/views", checkPremiumStatus, getWhoViewdMe);
 router.get(
   "/likes",
   rateLimiter({
-    limit: 20,
-    window: 5,
-    block: 5,
+    limit: PROFILE_LIMITS["profile:likes"].maxRequests,
+    window: PROFILE_LIMITS["profile:likes"].windowMinutes,
+    block: PROFILE_LIMITS["profile:likes"].blockMinutes,
     route: "profile:likes",
   }),
   checkPremiumStatus,
@@ -148,9 +149,9 @@ router.patch("/incognito", checkPremiumStatus, changeProfileIncognito);
 router.post(
   "/restore",
   rateLimiter({
-    limit: 3,
-    window: 60,
-    block: 30,
+    limit: PROFILE_LIMITS["profile:restore"].maxRequests,
+    window: PROFILE_LIMITS["profile:restore"].windowMinutes,
+    block: PROFILE_LIMITS["profile:restore"].blockMinutes,
     route: "profile:restore",
   }),
   restoreProfile,
@@ -159,9 +160,9 @@ router.post(
 router.get(
   "/public/:username",
   rateLimiter({
-    limit: 100,
-    window: 5,
-    block: 5,
+    limit: PROFILE_LIMITS["profile:public:view"].maxRequests,
+    window: PROFILE_LIMITS["profile:public:view"].windowMinutes,
+    block: PROFILE_LIMITS["profile:public:view"].blockMinutes,
     route: "profile:public:view",
   }),
   optionalLogin,
@@ -178,9 +179,9 @@ router
     isProfileExists,
     isProfileBlocked,
     rateLimiter({
-      limit: 50,
-      window: 2,
-      block: 5,
+      limit: PROFILE_LIMITS["profile:public:like"].maxRequests,
+      window: PROFILE_LIMITS["profile:public:like"].windowMinutes,
+      block: PROFILE_LIMITS["profile:public:like"].blockMinutes,
       route: "profile:public:like",
     }),
     likePublicProfile,
@@ -191,9 +192,9 @@ router
     isProfileExists,
     isProfileBlocked,
     rateLimiter({
-      limit: 50,
-      window: 2,
-      block: 5,
+      limit: PROFILE_LIMITS["profile:public:unlike"].maxRequests,
+      window: PROFILE_LIMITS["profile:public:unlike"].windowMinutes,
+      block: PROFILE_LIMITS["profile:public:unlike"].blockMinutes,
       route: "profile:public:unlike",
     }),
     unlikePublicProfile,
@@ -205,18 +206,18 @@ router
   .route("/block/:username")
   .post(
     rateLimiter({
-      limit: 5,
-      window: 5,
-      block: 2,
+      limit: PROFILE_LIMITS["profile:block"].maxRequests,
+      window: PROFILE_LIMITS["profile:block"].windowMinutes,
+      block: PROFILE_LIMITS["profile:block"].blockMinutes,
       route: "profile:block",
     }),
     blockUser,
   )
   .delete(
     rateLimiter({
-      limit: 5,
-      window: 5,
-      block: 2,
+      limit: PROFILE_LIMITS["profile:unblock"].maxRequests,
+      window: PROFILE_LIMITS["profile:unblock"].windowMinutes,
+      block: PROFILE_LIMITS["profile:unblock"].blockMinutes,
       route: "profile:unblock",
     }),
     unblockUser,
@@ -226,9 +227,9 @@ router.post(
   "/report/:username",
   isProfileBlocked,
   rateLimiter({
-    limit: 3,
-    window: 5,
-    block: 5,
+    limit: PROFILE_LIMITS["profile:report"].maxRequests,
+    window: PROFILE_LIMITS["profile:report"].windowMinutes,
+    block: PROFILE_LIMITS["profile:report"].blockMinutes,
     route: "profile:report",
   }),
   reportProfile,
@@ -243,9 +244,9 @@ router
     checkPremiumStatus,
     isPremiumUser(),
     rateLimiter({
-      limit: 20,
-      window: 5,
-      block: 5,
+      limit: PROFILE_LIMITS["profile:ringtone:incoming:update"].maxRequests,
+      window: PROFILE_LIMITS["profile:ringtone:incoming:update"].windowMinutes,
+      block: PROFILE_LIMITS["profile:ringtone:incoming:update"].blockMinutes,
       route: "profile:ringtone:incoming:update",
     }),
     updateIncomingTone,
@@ -254,9 +255,9 @@ router
     checkPremiumStatus,
     isPremiumUser(),
     rateLimiter({
-      limit: 20,
-      window: 5,
-      block: 5,
+      limit: PROFILE_LIMITS["profile:ringtone:incoming:delete"].maxRequests,
+      window: PROFILE_LIMITS["profile:ringtone:incoming:delete"].windowMinutes,
+      block: PROFILE_LIMITS["profile:ringtone:incoming:delete"].blockMinutes,
       route: "profile:ringtone:incoming:delete",
     }),
     resetIncomingTone,
@@ -271,9 +272,9 @@ router
       gold: true,
     }),
     rateLimiter({
-      limit: 10,
-      window: 5,
-      block: 10,
+      limit: PROFILE_LIMITS["profile:ringtone:ringback:update"].maxRequests,
+      window: PROFILE_LIMITS["profile:ringtone:ringback:update"].windowMinutes,
+      block: PROFILE_LIMITS["profile:ringtone:ringback:update"].blockMinutes,
       route: "profile:ringtone:ringback:update",
     }),
     updateRingBackTone,
@@ -284,9 +285,9 @@ router
       gold: true,
     }),
     rateLimiter({
-      limit: 10,
-      window: 5,
-      block: 10,
+      limit: PROFILE_LIMITS["profile:ringtone:ringback:delete"].maxRequests,
+      window: PROFILE_LIMITS["profile:ringtone:ringback:delete"].windowMinutes,
+      block: PROFILE_LIMITS["profile:ringtone:ringback:delete"].blockMinutes,
       route: "profile:ringtone:ringback:delete",
     }),
     resetRingBackTone,

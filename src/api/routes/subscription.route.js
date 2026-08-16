@@ -6,6 +6,7 @@ import {
 } from "../../middlewares/auth/auth.middleware.js";
 import { isProfileExists } from "../../middlewares/user/profile.middleware.js";
 import { rateLimiter } from "../../middlewares/auth/security.middleware.js";
+import { SUBSCRIPTION_LIMITS } from "../../constants/rateLimit.constant.js";
 import { checkPremiumStatus } from "../../middlewares/user/premium.middleware.js";
 
 import { subscriptionPlans } from "../controllers/user/subscription/plans.controller.js";
@@ -60,9 +61,9 @@ router.use(
   isProfileExists,
   checkPremiumStatus,
   rateLimiter({
-    limit: 50,
-    window: 2,
-    block: 5,
+    limit: SUBSCRIPTION_LIMITS["subscription:base"].maxRequests,
+    window: SUBSCRIPTION_LIMITS["subscription:base"].windowMinutes,
+    block: SUBSCRIPTION_LIMITS["subscription:base"].blockMinutes,
     route: "subscription:base",
   }),
 );
@@ -75,9 +76,9 @@ router.post(
   "/checkout",
   validateBasicInfo,
   rateLimiter({
-    limit: 10,
-    window: 5,
-    block: 10,
+    limit: SUBSCRIPTION_LIMITS["subscription:checkout"].maxRequests,
+    window: SUBSCRIPTION_LIMITS["subscription:checkout"].windowMinutes,
+    block: SUBSCRIPTION_LIMITS["subscription:checkout"].blockMinutes,
     route: "subscription:checkout",
   }),
   validatePlan,
@@ -92,9 +93,9 @@ router.post(
   "/activate-trial",
   validateBasicInfo,
   rateLimiter({
-    limit: 5,
-    window: 60,
-    block: 30,
+    limit: SUBSCRIPTION_LIMITS["subscription:activate_trial"].maxRequests,
+    window: SUBSCRIPTION_LIMITS["subscription:activate_trial"].windowMinutes,
+    block: SUBSCRIPTION_LIMITS["subscription:activate_trial"].blockMinutes,
     route: "subscription:activate_trial",
   }),
   activateTrial,
@@ -106,9 +107,9 @@ router.post(
 router.post(
   "/refund",
   rateLimiter({
-    limit: 5,
-    window: 60,
-    block: 30,
+    limit: SUBSCRIPTION_LIMITS["subscription:refund"].maxRequests,
+    window: SUBSCRIPTION_LIMITS["subscription:refund"].windowMinutes,
+    block: SUBSCRIPTION_LIMITS["subscription:refund"].blockMinutes,
     route: "subscription:refund",
   }),
   refundSubscription,
@@ -116,9 +117,9 @@ router.post(
 router.post(
   "/refund-autopay",
   rateLimiter({
-    limit: 5,
-    window: 60,
-    block: 30,
+    limit: SUBSCRIPTION_LIMITS["subscription:refund_autopay"].maxRequests,
+    window: SUBSCRIPTION_LIMITS["subscription:refund_autopay"].windowMinutes,
+    block: SUBSCRIPTION_LIMITS["subscription:refund_autopay"].blockMinutes,
     route: "subscription:refund_autopay",
   }),
   refundAutopaySubscription,
@@ -127,9 +128,9 @@ router.post(
 router.post(
   "/pause-autopay",
   rateLimiter({
-    limit: 10,
-    window: 60,
-    block: 5,
+    limit: SUBSCRIPTION_LIMITS["subscription:pause_autopay"].maxRequests,
+    window: SUBSCRIPTION_LIMITS["subscription:pause_autopay"].windowMinutes,
+    block: SUBSCRIPTION_LIMITS["subscription:pause_autopay"].blockMinutes,
     route: "subscription:pause_autopay",
   }),
   pauseAutopay,
@@ -137,9 +138,9 @@ router.post(
 router.post(
   "/resume-autopay",
   rateLimiter({
-    limit: 10,
-    window: 60,
-    block: 5,
+    limit: SUBSCRIPTION_LIMITS["subscription:resume_autopay"].maxRequests,
+    window: SUBSCRIPTION_LIMITS["subscription:resume_autopay"].windowMinutes,
+    block: SUBSCRIPTION_LIMITS["subscription:resume_autopay"].blockMinutes,
     route: "subscription:resume_autopay",
   }),
   resumeAutopay,
@@ -148,9 +149,9 @@ router.post(
 router.post(
   "/cancel-autopay",
   rateLimiter({
-    limit: 3,
-    window: 60,
-    block: 30,
+    limit: SUBSCRIPTION_LIMITS["subscription:cancel_autopay"].maxRequests,
+    window: SUBSCRIPTION_LIMITS["subscription:cancel_autopay"].windowMinutes,
+    block: SUBSCRIPTION_LIMITS["subscription:cancel_autopay"].blockMinutes,
     route: "subscription:cancel_autopay",
   }),
   cancelAutopay,

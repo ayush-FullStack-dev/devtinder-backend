@@ -5,6 +5,7 @@ import {
 } from "../../middlewares/auth/auth.middleware.js";
 import { isProfileExists } from "../../middlewares/user/profile.middleware.js";
 import { rateLimiter } from "../../middlewares/auth/security.middleware.js";
+import { PAYMENT_LIMITS } from "../../constants/rateLimit.constant.js";
 
 import {
     getCoupons,
@@ -18,9 +19,9 @@ router.use(
     findLoginData,
     isProfileExists,
     rateLimiter({
-        limit: 100,
-        window: 2,
-        block: 3,
+        limit: PAYMENT_LIMITS["payment:base"].maxRequests,
+        window: PAYMENT_LIMITS["payment:base"].windowMinutes,
+        block: PAYMENT_LIMITS["payment:base"].blockMinutes,
         route: "payment:base"
     })
 );

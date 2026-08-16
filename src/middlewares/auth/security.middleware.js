@@ -2,124 +2,124 @@ import sendResponse from "../../helpers/sendResponse.js";
 import redis from "../../config/redis.js";
 
 const defaultRateInfo = {
-    limit: 5,
-    route: "count",
-    window: 1,
-    block: 10
+  limit: 5,
+  route: "count",
+  window: 1,
+  block: 10,
 };
 
-// Set of security-critical routes requiring distributed rate limits
 const securityRoutes = new Set([
-    "signup",
-    "verify",
-    "login:identify",
-    "login:confirm",
-    "2fa:start",
-    "2fa:resend",
-    "2fa:confirm",
-    "refresh",
-    "logout",
-    "logout:all",
-    "session:list",
-    "account:me",
-    "session:revoke",
-    "password:start",
-    "password:confirm",
-    "password:forgot",
-    "mfa:start",
-    "mfa:verify"
+  "signup",
+  "verify",
+  "login:identify",
+  "login:confirm",
+  "2fa:start",
+  "2fa:resend",
+  "2fa:confirm",
+  "refresh",
+  "logout",
+  "logout:all",
+  "session:list",
+  "account:me",
+  "session:revoke",
+  "password:start",
+  "password:confirm",
+  "password:forgot",
+  "password:reset:get",
+  "password:reset:post",
+  "mfa:start",
+  "mfa:verify",
+  "approve_login",
 ]);
 
-// Bounded Map with LRU eviction to prevent memory growth under attack
 class BoundedMap {
-    constructor(maxSize) {
-        this.maxSize = maxSize;
-        this.map = new Map();
-    }
-    
-    get(key) {
-        if (!this.map.has(key)) return undefined;
-        const value = this.map.get(key);
-        this.map.delete(key);
-        this.map.set(key, value);
-        return value;
-    }
-    
-    set(key, value) {
-        if (this.map.has(key)) {
-            this.map.delete(key);
-        } else if (this.map.size >= this.maxSize) {
-            const oldestKey = this.map.keys().next().value;
-            this.map.delete(oldestKey);
-        }
-        this.map.set(key, value);
-    }
+  constructor(maxSize) {
+    this.maxSize = maxSize;
+    this.map = new Map();
+  }
 
-    delete(key) {
-        return this.map.delete(key);
+  get(key) {
+    if (!this.map.has(key)) return undefined;
+    const value = this.map.get(key);
+    this.map.delete(key);
+    this.map.set(key, value);
+    return value;
+  }
+
+  set(key, value) {
+    if (this.map.has(key)) {
+      this.map.delete(key);
+    } else if (this.map.size >= this.maxSize) {
+      const oldestKey = this.map.keys().next().value;
+      this.map.delete(oldestKey);
     }
+    this.map.set(key, value);
+  }
+
+  delete(key) {
+    return this.map.delete(key);
+  }
 }
 
-// Bounded local in-memory rate limiter with TTL/expiration
 class LocalRateLimiter {
-    constructor(maxSize = 10000) {
-        this.store = new BoundedMap(maxSize);
+  constructor(maxSize = 10000) {
+    this.store = new BoundedMap(maxSize);
+  }
+
+  check(route, identifier, limit, windowSeconds, blockSeconds) {
+    const windowMs = windowSeconds * 1000;
+    const blockMs = blockSeconds * 1000;
+    const now = Date.now();
+
+    const blockKey = `block:${route}:${identifier}`;
+    const blockedUntil = this.store.get(blockKey);
+    if (blockedUntil) {
+      if (now < blockedUntil) {
+        return { allowed: false, blocked: true };
+      }
+      this.store.delete(blockKey);
     }
 
-    check(route, identifier, limit, windowSeconds, blockSeconds) {
-        const windowMs = windowSeconds * 1000;
-        const blockMs = blockSeconds * 1000;
-        const now = Date.now();
+    const rateKey = `rate:${route}:${identifier}`;
+    let record = this.store.get(rateKey);
 
-        const blockKey = `block:${route}:${identifier}`;
-        const blockedUntil = this.store.get(blockKey);
-        if (blockedUntil) {
-            if (now < blockedUntil) {
-                return { allowed: false, blocked: true };
-            }
-            this.store.delete(blockKey);
-        }
-
-        const rateKey = `rate:${route}:${identifier}`;
-        let record = this.store.get(rateKey);
-
-        if (!record || now > record.resetTime) {
-            record = {
-                count: 1,
-                resetTime: now + windowMs
-            };
-            this.store.set(rateKey, record);
-            return { allowed: true, count: 1, blocked: false };
-        }
-
-        record.count++;
-        this.store.set(rateKey, record);
-
-        if (record.count > limit) {
-            this.store.set(blockKey, now + blockMs);
-            this.store.delete(rateKey);
-            return { allowed: false, count: record.count, blocked: true };
-        }
-
-        return { allowed: true, count: record.count, blocked: false };
+    if (!record || now > record.resetTime) {
+      record = {
+        count: 1,
+        resetTime: now + windowMs,
+      };
+      this.store.set(rateKey, record);
+      return { allowed: true, count: 1, blocked: false };
     }
+
+    record.count++;
+    this.store.set(rateKey, record);
+
+    if (record.count > limit) {
+      this.store.set(blockKey, now + blockMs);
+      this.store.delete(rateKey);
+      return { allowed: false, count: record.count, blocked: true };
+    }
+
+    return { allowed: true, count: record.count, blocked: false };
+  }
 }
 
 const localLimiter = new LocalRateLimiter(10000);
 
-// Log throttling to prevent flooding log files during an outage
 let lastRedisErrorTime = 0;
 const REDIS_ERROR_LOG_INTERVAL = 10000; // 10 seconds
 
 function logRedisError(err, route) {
-    const now = Date.now();
-    if (now - lastRedisErrorTime > REDIS_ERROR_LOG_INTERVAL) {
-        console.error(`[Redis RateLimiter Error] Failed to execute rate limiting for route: ${route}. Error: ${err.message}. Switching to local in-memory fallback.`);
-        lastRedisErrorTime = now;
-    }
+  const now = Date.now();
+  if (now - lastRedisErrorTime > REDIS_ERROR_LOG_INTERVAL) {
+    console.error(
+      `[Redis RateLimiter Error] Failed to execute rate limiting for route: ${route}. Error: ${err.message}. Switching to local in-memory fallback.`,
+    );
+    lastRedisErrorTime = now;
+  }
 }
 
-// Lua Script for single-trip atomic Redis rate limiting
 const rateLimitLua = `
 local blockKey = KEYS[1]
 local rateKey = KEYS[2]
@@ -145,92 +145,89 @@ return count
 `;
 
 export const rateLimiter = (rateInfo = defaultRateInfo) => {
-    const { limit, route } = rateInfo;
-    const window = rateInfo.window * 60; // to seconds
-    const block = rateInfo.block * 60;   // to seconds
+  const { limit, route } = rateInfo;
+  const windowSeconds = rateInfo.window * 60;
+  const blockSeconds = rateInfo.block * 60;
 
-    return async (req, res, next) => {
-        // Fast dynamic bypass for health and ping routes (safeguard)
-        if (route === "health" || route === "ping" || req.path?.includes("/health") || req.path?.includes("/ping")) {
-            return next();
-        }
+  return async (req, res, next) => {
+    if (
+      route === "health" ||
+      route === "ping" ||
+      req.path?.includes("/health") ||
+      req.path?.includes("/ping")
+    ) {
+      return next();
+    }
 
-        const identifier = req?.auth?.user?.id || req.realIp;
+    const identifier = req?.auth?.user?.id || req.realIp;
 
-        // Classify route
-        const isSecurity = securityRoutes.has(route);
+    // Classify route
+    const isSecurity = securityRoutes.has(route);
 
-        if (!isSecurity) {
-            // Normal route: always use the local bounded in-memory rate limiter
-            const result = localLimiter.check(route, identifier, limit, window, block);
-            if (!result.allowed) {
-                return sendResponse(
-                    res,
-                    429,
-                    "Too many requests. Try again later."
-                );
-            }
-            return next();
-        }
+    if (!isSecurity) {
+      const result = localLimiter.check(
+        route,
+        identifier,
+        limit,
+        windowSeconds,
+        blockSeconds,
+      );
+      if (!result.allowed) {
+        return sendResponse(res, 429, "Too many requests. Try again later.");
+      }
+      return next();
+    }
 
-        // Security-sensitive route: try Redis, fallback to conservative local emergency rate limiter if Redis fails
-        try {
-            const blockKey = `rate:block:${route}:${identifier}`;
-            const rateKey = `rate:${route}:${identifier}`;
+    try {
+      const blockKey = `rate:block:${route}:${identifier}`;
+      const rateKey = `rate:${route}:${identifier}`;
 
-            // Execute rate limiting atomically in 1 command roundtrip using Lua
-            const result = await redis.eval(
-                rateLimitLua,
-                2,
-                blockKey,
-                rateKey,
-                limit,
-                window,
-                block
-            );
+      const result = await redis.eval(
+        rateLimitLua,
+        2,
+        blockKey,
+        rateKey,
+        limit,
+        windowSeconds,
+        blockSeconds,
+      );
 
-            if (result === -1) {
-                return sendResponse(
-                    res,
-                    429,
-                    "Too many requests. Try again later."
-                );
-            }
+      if (result === -1) {
+        return sendResponse(res, 429, "Too many requests. Try again later.");
+      }
 
-            if (result === -2) {
-                return sendResponse(
-                    res,
-                    429,
-                    `Too many requests. Blocked for ${rateInfo.block} minutes`
-                );
-            }
+      if (result === -2) {
+        return sendResponse(
+          res,
+          429,
+          `Too many requests. Blocked for ${rateInfo.block} minutes`,
+        );
+      }
 
-            return next();
-        } catch (err) {
-            // Redis is unavailable or threw an error (e.g. request limit reached)
-            logRedisError(err, route);
+      return next();
+    } catch (err) {
+      logRedisError(err, route);
 
-            // Stricter local emergency fallback to prevent brute-forcing
-            const emergencyLimit = Math.max(1, Math.floor(limit / 5));
-            const emergencyBlock = block; // Keep original block duration
+      const emergencyLimit = Math.max(1, Math.floor(limit / 5));
+      const emergencyBlock = blockSeconds;
 
-            const result = localLimiter.check(
-                `emergency:${route}`,
-                identifier,
-                emergencyLimit,
-                window,
-                emergencyBlock
-            );
+      const result = localLimiter.check(
+        `emergency:${route}`,
+        identifier,
+        emergencyLimit,
+        windowSeconds,
+        emergencyBlock,
+      );
 
-            if (!result.allowed) {
-                return sendResponse(
-                    res,
-                    429,
-                    "Too many requests (emergency rate limiting active). Try again later."
-                );
-            }
+      if (!result.allowed) {
+        return sendResponse(
+          res,
+          429,
+          "Too many requests (emergency rate limiting active). Try again later.",
+        );
+      }
 
-            return next();
-        }
-    };
+      return next();
+    }
+  };
 };

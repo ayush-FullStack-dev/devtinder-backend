@@ -6,6 +6,7 @@ import {
 import { isProfileExists } from "../../middlewares/user/profile.middleware.js";
 import { validateChatAccess } from "../../middlewares/user/chat/chat.controller.js";
 import { rateLimiter } from "../../middlewares/auth/security.middleware.js";
+import { CALL_LIMITS } from "../../constants/rateLimit.constant.js";
 
 import {
     getCalls,
@@ -23,9 +24,9 @@ router.use(
     findLoginData,
     isProfileExists,
     rateLimiter({
-        limit: 50,
-        window: 2,
-        block: 5,
+        limit: CALL_LIMITS["call:base"].maxRequests,
+        window: CALL_LIMITS["call:base"].windowMinutes,
+        block: CALL_LIMITS["call:base"].blockMinutes,
         route: "call:base"
     })
 );

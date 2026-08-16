@@ -21,6 +21,8 @@ import {
   sessionRevokeHandler,
 } from "../controllers/auth/session.controller.js";
 import {
+  checkEmail,
+  checkUsername,
   verifyIdentifyHandler,
   verifyVerificationHandler,
 } from "../controllers/auth/auth.controller.js";
@@ -117,6 +119,7 @@ import {
   verifedMfaUser,
 } from "../../middlewares/auth/verifyAuth.middleware.js";
 import { rateLimiter } from "../../middlewares/auth/security.middleware.js";
+import { AUTH_LIMITS } from "../../constants/rateLimit.constant.js";
 
 const router = express.Router();
 
@@ -127,9 +130,9 @@ router.use(
   isLogin,
   findLoginData,
   rateLimiter({
-    limit: 60,
-    window: 10,
-    block: 5,
+    limit: AUTH_LIMITS["manage:base"].maxRequests,
+    window: AUTH_LIMITS["manage:base"].windowMinutes,
+    block: AUTH_LIMITS["manage:base"].blockMinutes,
     route: "manage:base",
   }),
   verifedMfaUser,
@@ -141,9 +144,9 @@ router.use(
   isLogin,
   findLoginData,
   rateLimiter({
-    limit: 60,
-    window: 10,
-    block: 5,
+    limit: AUTH_LIMITS["mfa:manage:base"].maxRequests,
+    window: AUTH_LIMITS["mfa:manage:base"].windowMinutes,
+    block: AUTH_LIMITS["mfa:manage:base"].blockMinutes,
     route: "mfa:manage:base",
   }),
   verifedMfaUser,
@@ -154,9 +157,9 @@ router.use(
   isLogin,
   findLoginData,
   rateLimiter({
-    limit: 40,
-    window: 5,
-    block: 5,
+    limit: AUTH_LIMITS["account"].maxRequests,
+    window: AUTH_LIMITS["account"].windowMinutes,
+    block: AUTH_LIMITS["account"].blockMinutes,
     route: "account",
   }),
 );
@@ -164,14 +167,14 @@ router.use(
 // Create new user
 router.post(
   "/signup/",
-  rateLimiter({ limit: 10, window: 60, block: 10, route: "signup" }),
+  rateLimiter({ limit: AUTH_LIMITS["signup"].maxRequests, window: AUTH_LIMITS["signup"].windowMinutes, block: AUTH_LIMITS["signup"].blockMinutes, route: "signup" }),
   signupValidation,
   signupHandler,
 );
 
 router.get(
   "/verify/",
-  rateLimiter({ limit: 20, window: 60, block: 5, route: "verify" }),
+  rateLimiter({ limit: AUTH_LIMITS["verify"].maxRequests, window: AUTH_LIMITS["verify"].windowMinutes, block: AUTH_LIMITS["verify"].blockMinutes, route: "verify" }),
   verifyEvl,
 );
 
@@ -179,7 +182,7 @@ router.get(
 router.post(
   "/login/identify/",
   validateBasicInfo,
-  rateLimiter({ limit: 30, window: 10, block: 10, route: "login:identify" }),
+  rateLimiter({ limit: AUTH_LIMITS["login:identify"].maxRequests, window: AUTH_LIMITS["login:identify"].windowMinutes, block: AUTH_LIMITS["login:identify"].blockMinutes, route: "login:identify" }),
   loginIdentifyValidation,
   loginIdentifyHandler,
 );
@@ -187,7 +190,7 @@ router.post(
 router.post(
   "/login/confirm/",
   validateBasicInfo,
-  rateLimiter({ limit: 30, window: 10, block: 5, route: "login:confirm" }),
+  rateLimiter({ limit: AUTH_LIMITS["login:confirm"].maxRequests, window: AUTH_LIMITS["login:confirm"].windowMinutes, block: AUTH_LIMITS["login:confirm"].blockMinutes, route: "login:confirm" }),
   verifyLoginValidation, // context + risk
   verifyLoginTrustDevice, // trusted session
   verifyLoginPasskey, // verylow / low / mid / high auto-login or verify
@@ -201,21 +204,21 @@ router.post(
 // verify-2fa
 router.post(
   "/verify-2fa/start/",
-  rateLimiter({ limit: 10, window: 60, block: 10, route: "2fa:start" }),
+  rateLimiter({ limit: AUTH_LIMITS["2fa:start"].maxRequests, window: AUTH_LIMITS["2fa:start"].windowMinutes, block: AUTH_LIMITS["2fa:start"].blockMinutes, route: "2fa:start" }),
   twoFAValidation,
   startTwoFAHandler,
 );
 
 router.post(
   "/verify-2fa/resend/",
-  rateLimiter({ limit: 10, window: 60, block: 15, route: "2fa:resend" }),
+  rateLimiter({ limit: AUTH_LIMITS["2fa:resend"].maxRequests, window: AUTH_LIMITS["2fa:resend"].windowMinutes, block: AUTH_LIMITS["2fa:resend"].blockMinutes, route: "2fa:resend" }),
   twoFAValidation,
   resendOtpHandler,
 );
 
 router.post(
   "/verify-2fa/confirm/",
-  rateLimiter({ limit: 10, window: 60, block: 15, route: "2fa:confirm" }),
+  rateLimiter({ limit: AUTH_LIMITS["2fa:confirm"].maxRequests, window: AUTH_LIMITS["2fa:confirm"].windowMinutes, block: AUTH_LIMITS["2fa:confirm"].blockMinutes, route: "2fa:confirm" }),
   verifyTwoFAValidation,
   verifyTwoFAEmail,
   verifyTwoFATotp,
@@ -228,7 +231,7 @@ router.post(
   "/refresh/",
   validateBasicInfo,
   extractRefreshToken,
-  rateLimiter({ limit: 20, window: 60, block: 10, route: "refresh" }),
+  rateLimiter({ limit: AUTH_LIMITS["refresh"].maxRequests, window: AUTH_LIMITS["refresh"].windowMinutes, block: AUTH_LIMITS["refresh"].blockMinutes, route: "refresh" }),
   validateRefreshToken,
   bindTokenToDevice,
   reEvaluateRisk,
@@ -243,7 +246,7 @@ router.post(
   validateBasicInfo,
   isLogin,
   findLoginData,
-  rateLimiter({ limit: 10, window: 60, block: 5, route: "logout" }),
+  rateLimiter({ limit: AUTH_LIMITS["logout"].maxRequests, window: AUTH_LIMITS["logout"].windowMinutes, block: AUTH_LIMITS["logout"].blockMinutes, route: "logout" }),
   extractLogoutInfo,
   validateLogout,
   logoutCurrentSession,
@@ -255,7 +258,7 @@ router.post(
   validateBasicInfo,
   isLogin,
   findLoginData,
-  rateLimiter({ limit: 5, window: 60, block: 10, route: "logout:all" }),
+  rateLimiter({ limit: AUTH_LIMITS["logout:all"].maxRequests, window: AUTH_LIMITS["logout:all"].windowMinutes, block: AUTH_LIMITS["logout:all"].blockMinutes, route: "logout:all" }),
   extractLogoutInfo,
   validateLogout,
   logoutAllSession,
@@ -267,14 +270,14 @@ router.get(
   "/session/",
   isLogin,
   findLoginData,
-  rateLimiter({ limit: 20, window: 60, block: 5, route: "session:list" }),
+  rateLimiter({ limit: AUTH_LIMITS["session:list"].maxRequests, window: AUTH_LIMITS["session:list"].windowMinutes, block: AUTH_LIMITS["session:list"].blockMinutes, route: "session:list" }),
   sessionHandler,
 );
 
 router.get(
   "/me",
   isLogin,
-  rateLimiter({ limit: 150, window: 5, block: 3, route: "account:me" }),
+  rateLimiter({ limit: AUTH_LIMITS["account:me"].maxRequests, window: AUTH_LIMITS["account:me"].windowMinutes, block: AUTH_LIMITS["account:me"].blockMinutes, route: "account:me" }),
   accountInfo,
 );
 
@@ -282,7 +285,7 @@ router.post(
   "/session/revoke/:id/",
   isLogin,
   findLoginData,
-  rateLimiter({ limit: 10, window: 60, block: 10, route: "session:revoke" }),
+  rateLimiter({ limit: AUTH_LIMITS["session:revoke"].maxRequests, window: AUTH_LIMITS["session:revoke"].windowMinutes, block: AUTH_LIMITS["session:revoke"].blockMinutes, route: "session:revoke" }),
   sessionRevokeHandler,
 );
 
@@ -292,7 +295,7 @@ router.post(
   validateBasicInfo,
   isLogin,
   findLoginData,
-  rateLimiter({ limit: 5, window: 60, block: 15, route: "password:start" }),
+  rateLimiter({ limit: AUTH_LIMITS["password:start"].maxRequests, window: AUTH_LIMITS["password:start"].windowMinutes, block: AUTH_LIMITS["password:start"].blockMinutes, route: "password:start" }),
   verifyIdentifyHandler,
 );
 
@@ -301,7 +304,7 @@ router.post(
   validateBasicInfo,
   isLogin,
   findLoginData,
-  rateLimiter({ limit: 5, window: 60, block: 20, route: "password:confirm" }),
+  rateLimiter({ limit: AUTH_LIMITS["password:confirm"].maxRequests, window: AUTH_LIMITS["password:confirm"].windowMinutes, block: AUTH_LIMITS["password:confirm"].blockMinutes, route: "password:confirm" }),
   verifyVerifaction,
   changePasswordHandler, // chnage password
   verifyLoginPasskey, // verylow / low / mid / high auto-login or verify
@@ -314,7 +317,7 @@ router.post(
 
 router.post(
   "/forgot-password/",
-  rateLimiter({ limit: 10, window: 300, block: 30, route: "password:forgot" }),
+  rateLimiter({ limit: AUTH_LIMITS["password:forgot"].maxRequests, window: AUTH_LIMITS["password:forgot"].windowMinutes, block: AUTH_LIMITS["password:forgot"].blockMinutes, route: "password:forgot" }),
   forgotPasswordHandler,
 );
 
@@ -322,18 +325,18 @@ router
   .route("/reset-password/:token/")
   .get(
     rateLimiter({
-      limit: 10,
-      window: 60,
-      block: 10,
+      limit: AUTH_LIMITS["password:reset:get"].maxRequests,
+      window: AUTH_LIMITS["password:reset:get"].windowMinutes,
+      block: AUTH_LIMITS["password:reset:get"].blockMinutes,
       route: "password:reset:get",
     }),
     resetPasswordValidation,
   )
   .post(
     rateLimiter({
-      limit: 5,
-      window: 60,
-      block: 20,
+      limit: AUTH_LIMITS["password:reset:post"].maxRequests,
+      window: AUTH_LIMITS["password:reset:post"].windowMinutes,
+      block: AUTH_LIMITS["password:reset:post"].blockMinutes,
       route: "password:reset:post",
     }),
     resetPasswordHandler,
@@ -344,7 +347,7 @@ router.post(
   "/mfa/start/",
   isLogin,
   findLoginData,
-  rateLimiter({ limit: 5, window: 60, block: 10, route: "mfa:start" }),
+  rateLimiter({ limit: AUTH_LIMITS["mfa:start"].maxRequests, window: AUTH_LIMITS["mfa:start"].windowMinutes, block: AUTH_LIMITS["mfa:start"].blockMinutes, route: "mfa:start" }),
   verifyIdentifyHandler,
 );
 
@@ -352,7 +355,7 @@ router.post(
   "/mfa/verify/",
   isLogin,
   findLoginData,
-  rateLimiter({ limit: 5, window: 60, block: 15, route: "mfa:verify" }),
+  rateLimiter({ limit: AUTH_LIMITS["mfa:verify"].maxRequests, window: AUTH_LIMITS["mfa:verify"].windowMinutes, block: AUTH_LIMITS["mfa:verify"].blockMinutes, route: "mfa:verify" }),
   verifyVerifaction,
   verifyLoginPasskey,
   verifyLoginPassword,
@@ -408,13 +411,26 @@ router
   .get(sessionApprovealInfo)
   .post(
     rateLimiter({
-      limit: 10,
-      window: 5,
-      block: 10,
+      limit: AUTH_LIMITS["approve_login"].maxRequests,
+      window: AUTH_LIMITS["approve_login"].windowMinutes,
+      block: AUTH_LIMITS["approve_login"].blockMinutes,
       route: "approve_login",
     }),
     sessionApprovealHandler,
   );
+
+//availability check
+router.get(
+  "/check-username/",
+  rateLimiter({ limit: AUTH_LIMITS["check:username"].maxRequests, window: AUTH_LIMITS["check:username"].windowMinutes, block: AUTH_LIMITS["check:username"].blockMinutes, route: "check:username" }),
+  checkUsername,
+);
+
+router.get(
+  "/check-email/",
+  rateLimiter({ limit: AUTH_LIMITS["check:email"].maxRequests, window: AUTH_LIMITS["check:email"].windowMinutes, block: AUTH_LIMITS["check:email"].blockMinutes, route: "check:email" }),
+  checkEmail,
+);
 
 router.get("/account/security-events/", securityEventHandler);
 router.get("/account/active-risks/", activeRiskHandler);

@@ -1,6 +1,6 @@
 import {
-    loginValidator,
-    loginIdentifyValidator
+  loginValidator,
+  loginIdentifyValidator,
 } from "../../validators/auth/login.validator.js";
 
 import sendResponse from "../../helpers/sendResponse.js";
@@ -15,46 +15,47 @@ import { fingerprintBuilder } from "../../utils/fingerprint.js";
 import { findUser } from "../../services/user.service.js";
 
 export const loginIdentifyValidation = async (req, res, next) => {
-    const { email, username } = req.body;
-    req.auth = {};
-    const validate = checkValidation(
-        loginIdentifyValidator,
-        req,
-        "vaildation failed for login"
-    );
+  const { email, username } = req.body;
+  req.auth = {};
 
-    if (!validate?.success) {
-        return sendResponse(res, 400, validate.jsonResponse);
-    }
+  const validate = checkValidation(
+    loginIdentifyValidator,
+    req,
+    "vaildation failed for login",
+  );
 
-    if (email) {
-        req.auth.login = email.trim().toLowerCase();
-        req.auth.fieldName = "email";
-    } else {
-        req.auth.login = username.trim().toLowerCase();
-        req.auth.fieldName = "username";
-    }
+  if (!validate?.success) {
+    return sendResponse(res, 400, validate.jsonResponse);
+  }
 
-    const user = await findUser({
-        [req.auth.fieldName]: req.auth.login
+  if (email) {
+    req.auth.login = email.trim().toLowerCase();
+    req.auth.fieldName = "email";
+  } else {
+    req.auth.login = username.trim().toLowerCase();
+    req.auth.fieldName = "username";
+  }
+
+  const user = await findUser({
+    [req.auth.fieldName]: req.auth.login,
+  });
+
+  if (!user) {
+    return sendResponse(res, 401, {
+      message: "Invalid email or username",
+      code: "INVALID_CREDENTIALS",
     });
+  }
 
-    if (!user) {
-        return sendResponse(res, 401, {
-            message: "Invalid email or username",
-            code: "INVALID_CREDENTIALS"
-        });
-    }
+  const deviceInfo = buildDeviceInfo(
+    req.headers["user-agent"],
+    validate.value,
+    await getIpDetails(req.realIp),
+  );
 
-    const deviceInfo = buildDeviceInfo(
-        req.headers["user-agent"],
-        validate.value,
-        await getIpDetails(req.realIp)
-    );
-
-    deviceInfo.fingerprint = fingerprintBuilder(deviceInfo);
-    req.auth.user = user;
-    req.auth.deviceInfo = deviceInfo;
-    req.auth.time = getTime(req);
-    return next();
+  deviceInfo.fingerprint = fingerprintBuilder(deviceInfo);
+  req.auth.user = user;
+  req.auth.deviceInfo = deviceInfo;
+  req.auth.time = getTime(req);
+  return next();
 };

@@ -13,6 +13,7 @@ import {
 } from "../../middlewares/user/premium.middleware.js";
 import { swipeProfile } from "../../middlewares/user/swipe.middleware.js";
 import { rateLimiter } from "../../middlewares/auth/security.middleware.js";
+import { DISCOVER_LIMITS } from "../../constants/rateLimit.constant.js";
 
 import {
   getDiscover,
@@ -33,9 +34,9 @@ router.use(
   findLoginData,
   isProfileExists,
   rateLimiter({
-    limit: 50,
-    window: 2,
-    block: 5,
+    limit: DISCOVER_LIMITS["discover:base"].maxRequests,
+    window: DISCOVER_LIMITS["discover:base"].windowMinutes,
+    block: DISCOVER_LIMITS["discover:base"].blockMinutes,
     route: "discover:base",
   }),
   checkPremiumStatus,
@@ -61,12 +62,12 @@ router.post(
 router.get("/likes", getWhoRightSwipe);
 router.post(
   "/rewind/",
-  rateLimiter({ limit: 15, window: 5, block: 10, route: "discover:rewind" }),
+  rateLimiter({ limit: DISCOVER_LIMITS["discover:rewind"].maxRequests, window: DISCOVER_LIMITS["discover:rewind"].windowMinutes, block: DISCOVER_LIMITS["discover:rewind"].blockMinutes, route: "discover:rewind" }),
   rewindOldSwipe,
 );
 router.post(
   "/boost/",
-  rateLimiter({ limit: 5, window: 10, block: 30, route: "discover:boost" }),
+  rateLimiter({ limit: DISCOVER_LIMITS["discover:boost"].maxRequests, window: DISCOVER_LIMITS["discover:boost"].windowMinutes, block: DISCOVER_LIMITS["discover:boost"].blockMinutes, route: "discover:boost" }),
   checkPacksStatus,
   boostProfile,
 );

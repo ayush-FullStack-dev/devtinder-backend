@@ -10,6 +10,7 @@ import {
 } from "../../middlewares/user/premium.middleware.js";
 
 import { rateLimiter } from "../../middlewares/auth/security.middleware.js";
+import { MATCH_LIMITS } from "../../constants/rateLimit.constant.js";
 
 import {
     getMatched,
@@ -28,9 +29,9 @@ router.use(
     findLoginData,
     isProfileExists,
     rateLimiter({
-        limit: 80,
-        window: 2,
-        block: 10,
+        limit: MATCH_LIMITS["match:base"].maxRequests,
+        window: MATCH_LIMITS["match:base"].windowMinutes,
+        block: MATCH_LIMITS["match:base"].blockMinutes,
         route: "match:base"
     }),
     checkPremiumStatus
@@ -41,9 +42,9 @@ router.get("/restore/", deactivatedMatches);
 router.get(
     "/",
     rateLimiter({
-        limit: 40,
-        window: 2,
-        block: 5,
+        limit: MATCH_LIMITS["match:list"].maxRequests,
+        window: MATCH_LIMITS["match:list"].windowMinutes,
+        block: MATCH_LIMITS["match:list"].blockMinutes,
         route: "match:list"
     }),
     getMatched
@@ -53,18 +54,18 @@ router
     .route("/:matchId")
     .get(
         rateLimiter({
-            limit: 40,
-            window: 2,
-            block: 5,
+            limit: MATCH_LIMITS["match:detail"].maxRequests,
+            window: MATCH_LIMITS["match:detail"].windowMinutes,
+            block: MATCH_LIMITS["match:detail"].blockMinutes,
             route: "match:detail"
         }),
         getSpecificMatch
     )
     .delete(
         rateLimiter({
-            limit: 10,
-            window: 10,
-            block: 10,
+            limit: MATCH_LIMITS["match:revoke"].maxRequests,
+            window: MATCH_LIMITS["match:revoke"].windowMinutes,
+            block: MATCH_LIMITS["match:revoke"].blockMinutes,
             route: "match:revoke"
         }),
         revokeMatch
@@ -73,9 +74,9 @@ router
 router.post(
     "/restore/:matchId",
     rateLimiter({
-        limit: 10,
-        window: 10,
-        block: 10,
+        limit: MATCH_LIMITS["match:restore"].maxRequests,
+        window: MATCH_LIMITS["match:restore"].windowMinutes,
+        block: MATCH_LIMITS["match:restore"].blockMinutes,
         route: "match:restore"
     }),
     isPremiumUser(),
