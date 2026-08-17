@@ -81,23 +81,63 @@ export const deletePendingUser = async (filter, option = { ...options }) => {
   return PendingUser.deleteOne(filter);
 };
 
+import ApiError from "../helpers/ApiError.js";
+
 export const createOrUpdatePendingUser = async (data) => {
   const email = data.email.trim().toLowerCase();
   const username = data.username.trim().toLowerCase();
-  return PendingUser.findOneAndUpdate(
-    {
-      $or: [{ email }, { username }],
-    },
-    {
+
+  const [pendingByEmail, pendingByUsername] = await Promise.all([
+    PendingUser.findOne({ email }),
+    PendingUser.findOne({ username }),
+  ]);
+
+  if (!pendingByEmail && !pendingByUsername) {
+    return PendingUser.create({
       ...data,
       email,
       username,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-    },
-    {
-      upsert: true,
-      new: true,
-      setDefaultsOnInsert: true,
-    },
-  );
+    });
+  }
+
+
+  if (pendingByEmail && pendingByUsername) {
+    if (!pendingByEmail._id.equals(pendingByUsername._id)) {
+      throw new ApiError(
+        "Conflict",
+        "Email and username are already associated with different pending registrations",
+        409,
+      );
+    }
+
+    return PendingUser.findByIdAndUpdate(
+      pendingByEmail._id,
+      {
+        ...data,
+        email,
+        username,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      },
+      {
+        new: true,
+      },
+    );
+  }
+
+  if (pendingByEmail) {
+    throw new ApiError(
+      "Conflict",
+      "Email already has a pending registration",
+      409,
+    );
+  }
+
+  if (pendingByUsername) {
+    throw new ApiError(
+      "Conflict",
+      "Username already has a pending registration",
+      409,
+    );
+  }
 };

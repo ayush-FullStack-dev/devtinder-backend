@@ -128,41 +128,53 @@ export const verifyVerificationHandler = (link, nextStep, others) => {
 };
 
 export const checkUsername = async (req, res) => {
-  const { username } = req.query;
-  const usernameExists = await User.exists({
-    username: username?.toLowerCase(),
-  });
+  const username = req.query.username?.trim().toLowerCase();
+
+  if (!username) {
+    return sendResponse(res, 200, {
+      available: null,
+      pending: false,
+    });
+  }
+
+  const [userExists, pendingExists] = await Promise.all([
+    User.exists({ username }),
+    PendingUser.exists({ username }),
+  ]);
 
   return sendResponse(res, 200, {
-    available: username ? !usernameExists : null,
+    available: !userExists && !pendingExists,
+    pending: Boolean(pendingExists),
   });
 };
 
 export const checkEmail = async (req, res) => {
-  const { email } = req.query;
-
-  if (!email) {
+  if (!req.query.email) {
     return sendResponse(res, 200, {
       available: null,
+      pending: false,
     });
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = req.query.email.trim().toLowerCase();
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (!emailRegex.test(normalizedEmail)) {
     return sendResponse(res, 400, {
       available: false,
+      pending: false,
       message: "Invalid email address",
     });
   }
 
-  const emailExists = await User.exists({
-    email: normalizedEmail,
-  });
+  const [userExists, pendingExists] = await Promise.all([
+    User.exists({ email: normalizedEmail }),
+    PendingUser.exists({ email: normalizedEmail }),
+  ]);
 
   return sendResponse(res, 200, {
-    available: !emailExists,
+    available: !userExists && !pendingExists,
+    pending: Boolean(pendingExists),
   });
 };
