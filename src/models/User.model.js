@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 import { userRefreshTokenSchema } from "../constants/auth.constant.js";
+import { genderValues } from "../constants/gender.constant.js";
 
 export const userSchema = new mongoose.Schema({
   socialId: {
@@ -35,7 +36,7 @@ export const userSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ["male", "female", "other"],
+    enum: genderValues,
     required: true,
   },
   loginMethods: {

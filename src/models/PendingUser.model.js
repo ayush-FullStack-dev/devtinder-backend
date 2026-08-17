@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { userSchema } from "./User.model.js";
+import { genderValues } from "../constants/gender.constant.js";
 
 const tempUserSchema = new mongoose.Schema({
   name: {
@@ -33,7 +34,7 @@ const tempUserSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ["female", "male", "transgender"],
+    enum: genderValues,
     required: true,
   },
   token: {

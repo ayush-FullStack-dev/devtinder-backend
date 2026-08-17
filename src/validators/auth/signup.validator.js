@@ -1,4 +1,5 @@
 import joi from "joi";
+import { genderValues } from "../../constants/gender.constant.js";
 
 const signupValidators = joi.object({
     name: joi.string().required().messages({
@@ -43,8 +44,8 @@ const signupValidators = joi.object({
         "number.min": "Minimum age allowed is 15."
     }),
 
-    gender: joi.string().valid("female", "male", "transgender").messages({
-        "any.only": "Gender must be male, female or transgender."
+    gender: joi.string().valid(...genderValues).messages({
+        "any.only": `Gender must be one of: ${genderValues.join(", ")}.`
     }),
 
     role: joi.string().valid("user").messages({

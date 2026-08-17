@@ -5,7 +5,6 @@ import sendResponse from "../../helpers/sendResponse.js";
 import { findUser } from "../../services/user.service.js";
 
 export const signupValidation = async (req, res, next) => {
-  req.body.gender = req.body.gender || "male";
   req.body.role = "user";
 
   const validate = checkValidation(

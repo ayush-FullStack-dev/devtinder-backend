@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 import { techStacks, lookingFor, role } from "../constants/profile.constant.js";
+import { genderValues } from "../constants/gender.constant.js";
 
 import { isValidS3UserPhotoKey } from "../helpers/s3.helper.js";
 
@@ -115,7 +116,7 @@ const profileSchema = new mongoose.Schema(
         },
         gender: {
             type: String,
-            enum: ["male", "female", "other"],
+            enum: genderValues,
             required: true
         },
 
