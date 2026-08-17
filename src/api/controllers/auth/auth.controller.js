@@ -14,6 +14,7 @@ import {
   sendSecurityUpgrade,
 } from "../../../utils/security/loginRisk.js";
 import User from "../../../models/User.model.js";
+import PendingUser from "../../../models/PendingUser.model.js";
 
 import { setSession, cleanupLogin } from "../../../services/session.service.js";
 

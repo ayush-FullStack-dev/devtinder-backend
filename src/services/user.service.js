@@ -81,8 +81,6 @@ export const deletePendingUser = async (filter, option = { ...options }) => {
   return PendingUser.deleteOne(filter);
 };
 
-import ApiError from "../helpers/ApiError.js";
-
 export const createOrUpdatePendingUser = async (data) => {
   const email = data.email.trim().toLowerCase();
   const username = data.username.trim().toLowerCase();
@@ -100,7 +98,6 @@ export const createOrUpdatePendingUser = async (data) => {
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
   }
-
 
   if (pendingByEmail && pendingByUsername) {
     if (!pendingByEmail._id.equals(pendingByUsername._id)) {
