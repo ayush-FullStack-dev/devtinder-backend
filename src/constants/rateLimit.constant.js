@@ -21,6 +21,12 @@ export const AUTH_LIMITS = {
     blockMinutes: BLOCK.MEDIUM,
   },
 
+  "signup:resend": {
+    maxRequests: 1,
+    windowMinutes: 0.5,
+    blockMinutes: BLOCK.LIGHT,
+  },
+
   verify: {
     maxRequests: 20,
     windowMinutes: WINDOW.AUTH,

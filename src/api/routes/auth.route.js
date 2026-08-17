@@ -8,6 +8,7 @@ import {
 import {
   signupHandler,
   verifyEvl,
+  resendVerificationHandler,
 } from "../controllers/auth/signup.controller.js";
 import {
   startTwoFAHandler,
@@ -176,6 +177,17 @@ router.get(
   "/verify/",
   rateLimiter({ limit: AUTH_LIMITS["verify"].maxRequests, window: AUTH_LIMITS["verify"].windowMinutes, block: AUTH_LIMITS["verify"].blockMinutes, route: "verify" }),
   verifyEvl,
+);
+
+router.post(
+  "/signup/resend-verification/",
+  rateLimiter({
+    limit: AUTH_LIMITS["signup:resend"].maxRequests,
+    window: AUTH_LIMITS["signup:resend"].windowMinutes,
+    block: AUTH_LIMITS["signup:resend"].blockMinutes,
+    route: "signup:resend",
+  }),
+  resendVerificationHandler,
 );
 
 // login to exting info

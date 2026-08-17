@@ -10,6 +10,7 @@ import {
   findPendingUser,
   deletePendingUser,
   createUser,
+  updatePendingUserToken,
 } from "../../../services/user.service.js";
 import { autoLogin } from "../../../utils/autoLogin.js";
 
@@ -77,4 +78,32 @@ export const verifyEvl = async (req, res) => {
   await deletePendingUser(findData._id, { id: true });
 
   return autoLogin(req, res, userData);
+};
+
+export const resendVerificationHandler = async (req, res) => {
+  const email = req.body.email.trim().toLowerCase();
+
+  const pendingUser = await findPendingUser({ email });
+
+  if (!pendingUser) {
+    return sendResponse(res, 200, {
+      message: "Verification email sent successfully",
+    });
+  }
+
+  const verificationToken = crypto
+    .randomBytes(Number(process.env.BYTE))
+    .toString("hex");
+
+  await updatePendingUserToken(
+    email,
+    verificationToken,
+    new Date(Date.now() + 15 * 60 * 1000),
+  );
+
+  await sendVerifyLink(email, verificationToken);
+
+  return sendResponse(res, 200, {
+    message: "Verification email sent successfully",
+  });
 };

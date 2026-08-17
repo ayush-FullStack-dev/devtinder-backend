@@ -81,6 +81,14 @@ export const deletePendingUser = async (filter, option = { ...options }) => {
   return PendingUser.deleteOne(filter);
 };
 
+export const updatePendingUserToken = async (email, token, expiresAt) => {
+  return PendingUser.findOneAndUpdate(
+    { email },
+    { token, expiresAt },
+    { new: true },
+  );
+};
+
 export const createOrUpdatePendingUser = async (data) => {
   const email = data.email.trim().toLowerCase();
   const username = data.username.trim().toLowerCase();
