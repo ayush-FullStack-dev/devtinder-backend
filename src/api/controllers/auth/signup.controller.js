@@ -101,7 +101,7 @@ export const resendVerificationHandler = async (req, res) => {
     new Date(Date.now() + 15 * 60 * 1000),
   );
 
-  await sendVerifyLink(email, verificationToken);
+   sendVerifyLink(email, verificationToken);
 
   return sendResponse(res, 200, {
     message: "Verification email sent successfully",
