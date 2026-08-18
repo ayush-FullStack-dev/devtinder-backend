@@ -77,7 +77,7 @@ export const sendMail = async (mail, subject, html) => {
 };
 
 export const sendVerifyLink = async (userMail, verificationToken) => {
-  const verifyLink = `${process.extra.DOMAIN_LINK}/verify?token=${verificationToken}`;
+  const verifyLink = `${process.extra.DOMAIN_LINK}/api/verify?token=${verificationToken}`;
   const mailInfo = await sendMail(
     userMail,
     "Verify Your Email Address",
