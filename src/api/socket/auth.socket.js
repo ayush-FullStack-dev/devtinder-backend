@@ -3,7 +3,13 @@ import { verificationJoin } from "../controllers/socket/auth/verification.socket
 
 export const registerAuthSocket = (authIO) => {
   authIO.on("connection", (socket) => {
+    const type = socket.handshake.query?.type;
+
+    if (type === "verification") {
+      verificationJoin(socket);
+      return;
+    }
+
     approvalJoin(socket);
-    verificationJoin(socket);
   });
 };

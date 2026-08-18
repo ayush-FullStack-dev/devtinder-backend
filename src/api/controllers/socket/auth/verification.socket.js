@@ -1,6 +1,6 @@
 export const verificationJoin = (socket) => {
   try {
-    const email = socket.handshake.auth?.email;
+    const email = socket.handshake.query?.email;
 
     if (!email || typeof email !== "string") {
       return socket.disconnect(true);

@@ -76,6 +76,12 @@ export const verifyEvl = async (req, res) => {
     emailId: email,
   });
 
+  const sockets = await authIO.in(room).fetchSockets();
+
+  for (const socket of sockets) {
+    socket.disconnect(true);
+  }
+
   const userData = await createUser({
     name: findData.name,
     email: email,
