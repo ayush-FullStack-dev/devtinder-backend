@@ -83,6 +83,7 @@ export const sendVerifyLink = async (userMail, verificationToken) => {
     "Verify Your Email Address",
     verifyAccountTemplate(verifyLink),
   );
+  
   return mailInfo;
 };
 

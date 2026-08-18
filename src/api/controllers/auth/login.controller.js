@@ -38,7 +38,7 @@ export const loginIdentifyHandler = async (req, res) => {
   const { user, deviceInfo, time } = req.auth;
   const ctxId = crypto.randomBytes(16).toString("hex");
   const score = await calculateLoginRisk(user, deviceInfo, time);
-  const riskLevel = await resolveRiskLevel(score, user.twoFA.enabled);
+  const riskLevel = resolveRiskLevel(score);
 
   if (riskLevel === "veryhigh" && !user.twoFA.enabled) {
     return sendSecurityUpgrade(user, res, deviceInfo);

@@ -37,7 +37,6 @@ export const updateUser = async (filter, data, option = { ...options }) => {
   if (option.many) {
     return User.updateMany(filter, data, {
       runValidators: true,
-      returnDocument: "after",
     });
   } else if (option.id) {
     return User.findByIdAndUpdate(filter, data, {
@@ -85,7 +84,7 @@ export const updatePendingUserToken = async (email, token, expiresAt) => {
   return PendingUser.findOneAndUpdate(
     { email },
     { token, expiresAt },
-    { new: true },
+    { returnDocument: "after" },
   );
 };
 
@@ -124,9 +123,7 @@ export const createOrUpdatePendingUser = async (data) => {
         username,
         expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       },
-      {
-        new: true,
-      },
+      { returnDocument: "after" },
     );
   }
 

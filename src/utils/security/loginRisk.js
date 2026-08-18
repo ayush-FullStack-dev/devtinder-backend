@@ -9,6 +9,7 @@ import { setSession } from "../../services/session.service.js";
 
 export const calculateLoginRisk = async (user, userInfo, time) => {
   let score = 0;
+
   if (user.refreshToken.length) {
     const lastSession = user.refreshToken[user.refreshToken.length - 1];
     score = await getRiskScore(userInfo, lastSession, {
@@ -19,19 +20,8 @@ export const calculateLoginRisk = async (user, userInfo, time) => {
   return score;
 };
 
-export const resolveRiskLevel = async (score, enabled) => {
-  let riskLevel = "low";
-  if (enabled) {
-    if (score >= 85) {
-      riskLevel = "veryhigh";
-    } else {
-      riskLevel = "mid";
-    }
-  } else {
-    riskLevel = await getRiskLevel(score);
-  }
-
-  return riskLevel;
+export const resolveRiskLevel = (score) => {
+  return getRiskLevel(score);
 };
 
 export const sendSecurityUpgrade = (user, res, deviceInfo) => {
