@@ -4,6 +4,7 @@ import ApiError from "../../../helpers/ApiError.js";
 import sendResponse from "../../../helpers/sendResponse.js";
 import { generateHash } from "../../../helpers/hash.js";
 import { sendVerifyLink } from "../../../helpers/mail.js";
+import { getAuthIO } from "../../../../socket.js";
 
 import {
   createOrUpdatePendingUser,
@@ -66,10 +67,19 @@ export const verifyEvl = async (req, res) => {
     );
   }
 
+  const email = findData.email.trim().toLowerCase();
+
+  const authIO = getAuthIO();
+  const room = `verification:${email}`;
+
+  authIO.to(room).emit("email:verified", {
+    emailId: email,
+  });
+
   const userData = await createUser({
     name: findData.name,
-    email: findData.email,
-    username: findData.username,
+    email: email,
+    username: findData.username.trim().toLowerCase(),
     password: findData.password,
     role: findData.role,
     gender: findData.gender,
@@ -101,7 +111,7 @@ export const resendVerificationHandler = async (req, res) => {
     new Date(Date.now() + 15 * 60 * 1000),
   );
 
-   await sendVerifyLink(email, verificationToken);
+  await sendVerifyLink(email, verificationToken);
 
   return sendResponse(res, 200, {
     message: "Verification email sent successfully",
