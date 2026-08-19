@@ -2,7 +2,7 @@ import { parseUA } from "./parseUA.js";
 import { getTime } from "./time.js";
 
 export const buildDeviceInfo = (ua, validateValues, info) => {
-  const time = getTime(validateValues?.clientTime);
+  const time = getTime({ body: { clientTime: validateValues?.clientTime } });
   return {
     ...parseUA(ua),
     deviceId: validateValues?.deviceId || "UNKNOWN",

@@ -92,20 +92,20 @@ export const getRiskScore = async (current, last, others) => {
 
 export const getTrustedScore = async (current, lastInfos) => {
     let score = 0;
-    if (!lastInfos.length) return 0;
+    if (!lastInfos.length) return { trusted: false, score: 0 };
 
     const lastLogin = lastInfos[0];
 
     const sameDevice = compareNoSaltHash(current.deviceId, lastLogin.deviceId);
-    if (!sameDevice) return 0;
+    if (!sameDevice) return { trusted: false, score: 0 };
 
     if (lastLogin.risk === "high" || lastLogin.risk === "veryhigh") {
-        return 0;
+        return { trusted: false, score: 0 };
     }
 
     const diffMs = Date.now() - lastLogin.createdAt.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
-    if (diffHours < 6) return 0;
+    if (diffHours < 6) return { trusted: false, score: 0 };
 
     const validLogins = lastInfos.filter(l => {
         return (

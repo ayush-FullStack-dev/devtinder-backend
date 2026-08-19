@@ -8,14 +8,14 @@ import { getPasskey } from "../../helpers/passkey.js";
 import { setSession } from "../../services/session.service.js";
 
 export const calculateLoginRisk = async (user, userInfo, time) => {
-  let score = 0;
-
-  if (user.refreshToken.length) {
-    const lastSession = user.refreshToken[user.refreshToken.length - 1];
-    score = await getRiskScore(userInfo, lastSession, {
-      time,
-    });
+  if (!user.refreshToken.length) {
+    return 25;
   }
+
+  const lastSession = user.refreshToken[user.refreshToken.length - 1];
+  const score = await getRiskScore(userInfo, lastSession, {
+    time,
+  });
 
   return score;
 };
@@ -80,7 +80,7 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
-      allowedMethod: ["passkey", "password"],
+      allowedMethod: ["passkey", "password", "trusted_session"],
       primaryMethod: "passkey",
       passkey: options,
     };
@@ -95,6 +95,7 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
         "password",
         "session_approval",
         "security_code",
+        "trusted_session",
       ],
       primaryMethod: "passkey",
       passkey: options,

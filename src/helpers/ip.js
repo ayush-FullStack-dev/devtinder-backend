@@ -67,15 +67,14 @@ export const getAltIpDetails = (ip) => {
 const isPrivateIp = (ip) => {
   if (!ip) return true;
 
+  const raw = ip.startsWith("::ffff:") ? ip.slice(7) : ip;
+
   return (
-    ip === "127.0.0.1" ||
+    raw === "127.0.0.1" ||
     ip === "::1" ||
-    ip.startsWith("10.") ||
-    ip.startsWith("192.168.") ||
-    /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip) ||
-    ip.includes("::ffff:127.") ||
-    ip.includes("::ffff:10.") ||
-    ip.includes("::ffff:192.168.")
+    raw.startsWith("10.") ||
+    raw.startsWith("192.168.") ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(raw)
   );
 };
 

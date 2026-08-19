@@ -17,12 +17,12 @@ import { securitycodeLua } from "../../constants/redis.contants.js";
 import { verifyToken } from "../../helpers/jwt.js";
 import { buildDeviceInfo } from "../../helpers/buildDeviceInfo.js";
 import { checkValidation, setRefreshExpiry } from "../../helpers/helpers.js";
-import { getTime } from "../../helpers/time.js";
+
 import { getIpDetails } from "../../helpers/ip.js";
 
 import { verifyLoginValidator } from "../../validators/auth/verifyLogin.validator.js";
 
-import { getRiskScore } from "../../utils/security/riskEngine.js";
+
 import {
   sendSessionApproval,
   checkSessionApproval,
@@ -48,7 +48,6 @@ const checkMethodLimitExceeded = async (ctxId, method) => {
 };
 
 export const verifyLoginValidation = async (req, res, next) => {
-  const time = getTime(req);
   const ctxId = req.signedCookies?.login_ctx;
 
   const validate = checkValidation(
@@ -89,11 +88,14 @@ export const verifyLoginValidation = async (req, res, next) => {
     });
   }
 
-  const riskScore = await getRiskScore(getDeviceInfo, savedDeviceInfo, {
-    time,
-  });
+  const contextChanged =
+    getDeviceInfo.deviceId !== savedDeviceInfo.deviceId ||
+    getDeviceInfo.ip !== savedDeviceInfo.ip ||
+    getDeviceInfo.country !== savedDeviceInfo.country ||
+    getDeviceInfo.city !== savedDeviceInfo.city ||
+    getDeviceInfo.timezone !== savedDeviceInfo.timezone;
 
-  if (riskScore > 0) {
+  if (contextChanged) {
     await cleanupLogin(ctxId);
     return sendResponse(
       res,
@@ -139,6 +141,15 @@ export const verifyLoginTrustDevice = async (req, res, next) => {
   const { user, deviceInfo, info, ctxId, values } = req.auth;
 
   if (values?.method === "trusted_session") {
+    if (info.risk === "high" || info.risk === "veryhigh") {
+      req.auth.verify = {
+        success: false,
+        method: "trusted_session",
+        message: "Trusted session is not allowed for this risk level. Please use another method.",
+      };
+      return next();
+    }
+
     const isTrusted = verifyToken(req.signedCookies.trustedSession);
 
     if (!isTrusted?.success || isTrusted?.data.did !== deviceInfo.deviceId) {
@@ -170,19 +181,11 @@ export const verifyLoginTrustDevice = async (req, res, next) => {
     return next();
   }
 
-  if (info.risk !== "verylow") return next();
+  if (info.risk === "high" || info.risk === "veryhigh") return next();
 
   if (user.logout?.length) {
     const lastLogout = user.logout[user.logout.length - 1];
     if (lastLogout?.logout === "logout-all") return next();
-  }
-
-  if (info?.riskScore <= 5) {
-    req.auth.verify = {
-      success: true,
-      method: "trusted_session",
-    };
-    return next();
   }
 
   const isTrusted = verifyToken(req.signedCookies.trustedSession);
@@ -459,14 +462,6 @@ export const verifyLoginFallback = async (req, res, next) => {
   const { info, verify } = req.auth;
 
   if (verify?.success !== undefined) {
-    return next();
-  }
-
-  if (info.risk === "verylow") {
-    req.auth.verify = {
-      success: true,
-      method: "fallback",
-    };
     return next();
   }
 

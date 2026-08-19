@@ -26,7 +26,7 @@ const AUTO_LOGIN_VERIFY = {
  */
 export const autoLogin = async (req, res, user) => {
   const ipDetails = await getIpDetails(req.realIp);
-  const deviceInfo = buildDeviceInfo(req.headers["user-agent"], {}, ipDetails);
+  const deviceInfo = buildDeviceInfo(req.headers["user-agent"], req.body || {}, ipDetails);
   const refreshExpiry = setRefreshExpiry({ remember: true });
 
   const userInfo = {
