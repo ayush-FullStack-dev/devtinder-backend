@@ -1062,7 +1062,7 @@ const newLoginAlertTemplete = (
                             color:#4b5057;
                           "
                         >
-                          ${device || "Unknown"}${browser ? ` on ${browser}` : ""}
+                          ${device || "Unknown"}
                         </td>
 
                       </tr>
