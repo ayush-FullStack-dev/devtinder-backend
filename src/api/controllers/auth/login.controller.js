@@ -24,6 +24,7 @@ import {
   buildLoginDecisionResponse,
 } from "../../../utils/security/loginRisk.js";
 import { issueTokens } from "../../../utils/issueTokens.js";
+import { sendLoginAlert } from "../../../helpers/mail.js";
 
 const buildUserInfo = (deviceInfo, verify, info) => ({
   ...deviceInfo,
@@ -154,6 +155,11 @@ export const verifyLoginHandler = async (req, res) => {
       userInfo,
     });
 
+  await sendLoginAlert(user.email, {
+    name: user.name,
+    ...deviceInfo,
+    deviceName: userInfo.deviceName,
+  });
   // server-side call (e.g. autoLogin after signup)
   if (req.auth.type === "server") {
     return {

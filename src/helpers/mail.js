@@ -126,26 +126,36 @@ export const sendSuspiciousAlert = async (userMail, deviceInfo) => {
 };
 
 export const sendLoginAlert = async (userMail, userInfo) => {
-  const link = `${process.extra.DOMAIN_LINK}/account/resetPassword/`;
+  const link = `${process.extra.DOMAIN_LINK}/account/reset-password/`;
 
-  for (const info in userInfo) {
-    userInfo[info] = userInfo[info] || "UNKNOWN";
-  }
+  const {
+    name = "User",
+    ip = "UNKNOWN",
+    location = "UNKNOWN",
+    deviceModel = "UNKNOWN",
+    deviceName = "UNKNOWN",
+    browser = "UNKNOWN",
+    fullTime = {},
+  } = userInfo || {};
+
+  const readableTime = fullTime?.readable || "UNKNOWN";
+
+  const device = deviceName !== "UNKNOWN" ? deviceName : deviceModel;
 
   const mailInfo = await sendMail(
     userMail,
-    `New login to DevTinder from ${userInfo.deviceName}`,
+    `New login to DevTinder from ${device}`,
     newLoginAlertTemplete(
-      userMail,
-      userInfo.name,
-      userInfo.ip,
-      userInfo.location,
-      userInfo.deviceModel,
-      userInfo.browser,
-      userInfo.fullTime.readable,
+      name,
+      ip,
+      location,
+      device,
+      browser,
+      readableTime,
       link,
     ),
   );
+
   return mailInfo;
 };
 
