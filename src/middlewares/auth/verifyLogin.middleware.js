@@ -112,10 +112,7 @@ export const verifyLoginValidation = async (req, res, next) => {
     );
   }
 
-  if (
-    savedInfo.allowedMethod &&
-    !savedInfo.allowedMethod?.includes(validate.value.method)
-  ) {
+  if (!savedInfo.allowedMethod?.includes(validate.value.method)) {
     await cleanupLogin(ctxId);
     return sendResponse(
       res,
@@ -137,66 +134,37 @@ export const verifyLoginValidation = async (req, res, next) => {
 };
 
 export const verifyLoginTrustDevice = async (req, res, next) => {
-  const { user, deviceInfo, info, ctxId, values } = req.auth;
+  const { deviceInfo, ctxId, values } = req.auth;
 
-  if (values?.method === "trusted_session") {
-    if (info.risk === "high" || info.risk === "veryhigh") {
-      req.auth.verify = {
-        success: false,
-        method: "trusted_session",
-        message:
-          "Trusted session is not allowed for this risk level. Please use another method.",
-      };
-      return next();
-    }
-
-    const isTrusted = verifyToken(req.signedCookies.trustedSession);
-
-    if (!isTrusted?.success || isTrusted?.data.did !== deviceInfo.deviceId) {
-      const attempts = await trackMethodFailure(ctxId, "trusted_session");
-      const limitExceeded =
-        attempts > methodFailedAttemptLimits.trusted_session;
-
-      if (limitExceeded) {
-        await cleanupLogin(ctxId);
-        return sendResponse(res, 401, {
-          message:
-            "Too many failed trusted session attempts. Please start again.",
-          action: "RESTART_LOGIN",
-        });
-      }
-
-      req.auth.verify = {
-        success: false,
-        method: "trusted_session",
-        message: "Device is not trusted. Please use another method.",
-      };
-      return next();
-    }
-
-    req.auth.verify = {
-      success: true,
-      method: "trusted_session",
-    };
-    return next();
-  }
-
-  if (info.risk === "high" || info.risk === "veryhigh") return next();
-
-  if (user.logout?.length) {
-    const lastLogout = user.logout[user.logout.length - 1];
-    if (lastLogout?.logout === "logout-all") return next();
-  }
+  if (values?.method !== "trusted_session") return next();
 
   const isTrusted = verifyToken(req.signedCookies.trustedSession);
 
-  if (isTrusted?.success && isTrusted?.data.did === deviceInfo.deviceId) {
+  if (!isTrusted?.success || isTrusted?.data.did !== deviceInfo.deviceId) {
+    const attempts = await trackMethodFailure(ctxId, "trusted_session");
+    const limitExceeded = attempts > methodFailedAttemptLimits.trusted_session;
+
+    if (limitExceeded) {
+      await cleanupLogin(ctxId);
+      return sendResponse(res, 401, {
+        message:
+          "Too many failed trusted session attempts. Please start again.",
+        action: "RESTART_LOGIN",
+      });
+    }
+
     req.auth.verify = {
-      success: true,
+      success: false,
       method: "trusted_session",
+      message: "Device is not trusted. Please use another method.",
     };
     return next();
   }
+
+  req.auth.verify = {
+    success: true,
+    method: "trusted_session",
+  };
 
   return next();
 };
@@ -209,10 +177,6 @@ export const verifyLoginPasskey = async (req, res, next) => {
   }
 
   if (values.method !== "passkey") {
-    return next();
-  }
-
-  if (!["low", "mid", "high"].includes(info.risk)) {
     return next();
   }
 
@@ -299,10 +263,6 @@ export const verifyLoginPassword = async (req, res, next) => {
   }
 
   if (values.method !== "password") {
-    return next();
-  }
-
-  if (!["low", "mid", "high"].includes(info.risk)) {
     return next();
   }
 
@@ -459,7 +419,7 @@ export const verifyLoginSecurityCode = async (req, res, next) => {
 };
 
 export const verifyLoginFallback = async (req, res, next) => {
-  const { info, verify } = req.auth;
+  const { values, verify } = req.auth;
 
   if (verify?.success !== undefined) {
     return next();
@@ -467,7 +427,7 @@ export const verifyLoginFallback = async (req, res, next) => {
 
   req.auth.verify = {
     success: false,
-    method: null,
+    method: values?.method || null,
     message: "Verification failed. Please use a valid authentication method.",
   };
 

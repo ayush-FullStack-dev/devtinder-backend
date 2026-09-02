@@ -67,20 +67,7 @@ export const loginIdentifyHandler = async (req, res) => {
 export const verifyLoginHandler = async (req, res) => {
   const { refreshExpiry, user, verify, deviceInfo, info, ctxId } = req.auth;
 
-  const allowedMethod = [
-    "passkey",
-    "password",
-    "security_code",
-    "session_approval",
-    "trusted_session",
-  ];
-
-  const primaryMethod = {
-    verylow: "password",
-    low: "passkey",
-    mid: "passkey",
-    high: "security_code",
-  };
+  const allowedMethod = info.allowedMethod || [];
 
   const methods = collectOnMethod(user.twoFA.twoFAMethods);
 
@@ -92,7 +79,7 @@ export const verifyLoginHandler = async (req, res) => {
       message: "no method provided to verify",
       code: "METHOD_NOT_FOUND",
       methods: allowedMethod,
-      primaryMethod: primaryMethod[info.risk],
+      primaryMethod: allowedMethod[0],
     });
   }
 

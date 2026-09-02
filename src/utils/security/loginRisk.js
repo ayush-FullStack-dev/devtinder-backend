@@ -80,7 +80,13 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
-      allowedMethod: ["passkey", "password", "trusted_session"],
+      allowedMethod: [
+        "passkey",
+        "password",
+        "session_approval",
+        "security_code",
+        "trusted_session",
+      ],
       primaryMethod: "passkey",
       passkey: options,
     };
