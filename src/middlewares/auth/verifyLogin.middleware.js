@@ -22,7 +22,6 @@ import { getIpDetails } from "../../helpers/ip.js";
 
 import { verifyLoginValidator } from "../../validators/auth/verifyLogin.validator.js";
 
-
 import {
   sendSessionApproval,
   checkSessionApproval,
@@ -145,7 +144,8 @@ export const verifyLoginTrustDevice = async (req, res, next) => {
       req.auth.verify = {
         success: false,
         method: "trusted_session",
-        message: "Trusted session is not allowed for this risk level. Please use another method.",
+        message:
+          "Trusted session is not allowed for this risk level. Please use another method.",
       };
       return next();
     }
@@ -467,7 +467,7 @@ export const verifyLoginFallback = async (req, res, next) => {
 
   req.auth.verify = {
     success: false,
-    method: "fallback",
+    method: null,
     message: "Verification failed. Please use a valid authentication method.",
   };
 
