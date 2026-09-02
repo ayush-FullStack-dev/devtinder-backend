@@ -6,7 +6,7 @@ import config from "../config/config.js";
 
 export const getPasskey = async (user) => {
   const options = await generateAuthenticationOptions({
-    rpID: process.env.NODE_ENV ? process.env.DOMAIN : "localhost",
+    rpID: process.env.DOMAIN,
     allowCredentials: user.loginMethods.passkeys.keys.map((k) => ({
       id: k.credentialId,
       type: "public-key",
@@ -15,9 +15,8 @@ export const getPasskey = async (user) => {
     timeout: 60000,
     userVerification: "required",
   });
-  return options;
 
-  return "Passkey is not enabled";
+  return options;
 };
 
 export const verifyKey = async (auth, saved, passkey) => {
@@ -25,8 +24,8 @@ export const verifyKey = async (auth, saved, passkey) => {
     const verification = await verifyAuthenticationResponse({
       response: auth,
       expectedChallenge: saved?.challenge,
-      expectedOrigin: "http://localhost:8158",
-      expectedRPID: "localhost",
+      expectedOrigin: process.env.DOMAIN_LINK,
+      expectedRPID: process.env.DOMAIN,
       credential: {
         id: passkey.credentialId,
         publicKey: Buffer.from(passkey.publicKey, "base64url"),

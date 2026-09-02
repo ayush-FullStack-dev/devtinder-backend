@@ -14,8 +14,7 @@ import {
     setSession,
     cleanupMfa
 } from "../../../services/session.service.js";
-
-import { buildDeviceInfo } from "../../../helpers/buildDeviceInfo.js";
+import config from "../../../config/config.js"
 
 
 function detectDeviceType(transports = []) {
@@ -85,8 +84,8 @@ export const addNewPasskeyHandler = async (req, res) => {
             transports: pk.transports || []
         }));
         const options = await generateRegistrationOptions({
-            rpName: "http://localhost:8158",
-            rpID: "localhost",
+            rpName: process.env.DOMAIN_LINK,
+            rpID: process.env.DOMAIN,
             userID: isoUint8Array.fromUTF8String(user._id),
             userName: user.email,
             userDisplayName: user.name,
@@ -125,8 +124,8 @@ export const addNewPasskeyHandler = async (req, res) => {
     const verification = await verifyRegistrationResponse({
         response: req.body,
         expectedChallenge: info.challenge,
-        expectedOrigin: "http://localhost:8158",
-        expectedRPID: "localhost",
+        expectedOrigin: process.env.DOMAIN_LINK,
+        expectedRPID: process.env.DOMAIN,
         requireUserVerification: true
     });
 
