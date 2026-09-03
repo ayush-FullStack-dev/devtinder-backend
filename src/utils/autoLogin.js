@@ -18,12 +18,7 @@ const AUTO_LOGIN_VERIFY = {
   method: "trusted_session",
 };
 
-/**
- * Issues tokens and sends login cookies+response after signup/verification.
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- * @param {object} user - Mongoose user document
- */
+
 export const autoLogin = async (req, res, user) => {
   const ipDetails = await getIpDetails(req.realIp);
   const deviceInfo = buildDeviceInfo(req.headers["user-agent"], req.body || {}, ipDetails);

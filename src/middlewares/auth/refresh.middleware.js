@@ -85,7 +85,7 @@ export const bindTokenToDevice = async (req, res, next) => {
   );
 
   deviceInfo.loginContext = token.loginContext;
-  deviceInfo.loginContext.mfa = { required: true, complete: false };
+  deviceInfo.loginContext.mfa = { required: false, complete: true, methodsUsed: "none" };
 
   const validFp = await compareFingerprint(deviceInfo, token.fingerprint);
   deviceInfo.fingerprint = fingerprintBuilder(deviceInfo);
@@ -134,8 +134,9 @@ export const reEvaluateRisk = async (req, res, next) => {
 
   req.auth.riskLevel = riskLevel;
 
+  const isTrusted = riskLevel === "verylow" || riskLevel === "low";
   deviceInfo.loginContext.trust = {
-    deviceTrusted: true,
+    deviceTrusted: isTrusted,
     sessionLevel: riskLevel,
   };
 
@@ -180,7 +181,14 @@ export const handleStepUpIfNeeded = async (req, res, next) => {
   if (verify?.success === undefined || verify?.stepup !== "2fa") return next();
 
   if (verify?.action === "stepup") {
-    const methods = collectOnMethod(user.twoFA.loginMethods);
+    if (tokenIndex === undefined || tokenIndex === -1) {
+      return removeCookie(res, 401, {
+        message: "Session is no longer valid. Please sign in again.",
+        action: "logout",
+      });
+    }
+
+    const methods = collectOnMethod(user.twoFA.twoFAMethods);
 
     const data = await setTwoFa(undefined, token, methods);
 
@@ -227,6 +235,13 @@ export const rotateRefreshToken = async (req, res, next) => {
   const { token, user, tokenIndex, deviceInfo, verify } = req.auth;
 
   if (verify?.success === false) return next();
+
+  if (tokenIndex === undefined || tokenIndex === -1) {
+    return removeCookie(res, 401, {
+      message: "Session is no longer valid. Please sign in again.",
+      action: "logout",
+    });
+  }
 
   const expiry = setRefreshExpiry(req.body);
   const accessToken = getAccessToken(user);

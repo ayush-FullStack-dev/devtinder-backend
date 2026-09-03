@@ -1,4 +1,3 @@
-import { removeCookie } from "../../../helpers/sendResponse.js";
 import { updateUser } from "../../../services/user.service.js";
 
 import {
@@ -49,6 +48,20 @@ export const issueNewTokens = async (req, res, next) => {
         action: "logout",
         message: verify?.message,
         ...info,
+      });
+  }
+
+  if (verify?.success === false) {
+    return res
+      .clearCookie("accessToken", cookieOption)
+      .clearCookie("refreshToken", cookieOption)
+      .status(401)
+      .json({
+        success: false,
+        action: verify?.action || "security_block",
+        message:
+          verify?.message ||
+          "Security verification failed. Please sign in again.",
       });
   }
 

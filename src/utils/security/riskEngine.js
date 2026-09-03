@@ -15,7 +15,22 @@ export const getRiskLevel = score => {
 export const getRiskScore = async (current, last, others) => {
     let score = 0;
 
-    const hour = new Date().getHours();
+    let hour;
+    try {
+        if (current.timezone && current.timezone !== "UNKNOWN") {
+            const formatter = new Intl.DateTimeFormat("en-US", {
+                hour: "numeric",
+                hour12: false,
+                timeZone: current.timezone,
+            });
+            hour = parseInt(formatter.format(new Date()), 10);
+        } else {
+            hour = new Date().getHours();
+        }
+    } catch {
+        // Invalid timezone string — fall back to server time
+        hour = new Date().getHours();
+    }
     const diffMin = epochify.getDiff(Date.now(), last.createdAt, "minute");
     const diffDay = epochify.getDiff(Date.now(), last.createdAt, "days");
 
@@ -110,7 +125,7 @@ export const getTrustedScore = async (current, lastInfos) => {
     const validLogins = lastInfos.filter(l => {
         return (
             l.deviceId === lastLogin.deviceId &&
-            (l.risk === "low" || l.risk === "verylow" || l.risk === "mid")
+            (l.risk === "low" || l.risk === "verylow")
         );
     }).length;
 
