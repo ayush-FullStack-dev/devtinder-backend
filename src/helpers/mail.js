@@ -144,7 +144,7 @@ export const sendLoginAlert = async (userMail, userInfo) => {
 
   const mailInfo = await sendMail(
     userMail,
-    `New login to DevTinder from ${device}`,
+    `New Sign-In detected on your DevTinder account`,
     newLoginAlertTemplete(
       name,
       ip,

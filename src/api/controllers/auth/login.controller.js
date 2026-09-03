@@ -142,12 +142,10 @@ export const verifyLoginHandler = async (req, res) => {
       userInfo,
     });
 
-  await sendLoginAlert(user.email, {
-    name: user.name,
-    ...deviceInfo,
-    deviceName: userInfo.deviceName,
-  });
-  // server-side call (e.g. autoLogin after signup)
+  if (["mid", "high", "veryhigh"].includes(info.risk)) {
+    await sendLoginAlert(updatedUser, deviceInfo);
+  }
+
   if (req.auth.type === "server") {
     return {
       success: true,

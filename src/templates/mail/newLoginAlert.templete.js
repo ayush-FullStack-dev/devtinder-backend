@@ -11,11 +11,17 @@ const newLoginAlertTemplete = (
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <meta
+      http-equiv="X-UA-Compatible"
+      content="IE=edge"
+    />
+
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0"
     />
+
     <meta
       name="format-detection"
       content="telephone=no,address=no,email=no,date=no,url=no"
@@ -130,8 +136,12 @@ const newLoginAlertTemplete = (
         color: #171717;
       }
 
+      /*
+       * Keep the complete sign-in information visually light.
+       * Only a very subtle weight difference is used for labels.
+       */
       .detail-label {
-        font-weight: 600;
+        font-weight: 500;
       }
 
       .footer-text {
@@ -178,6 +188,11 @@ const newLoginAlertTemplete = (
         .detail-text {
           font-size: 15px !important;
           line-height: 23px !important;
+          font-weight: 400 !important;
+        }
+
+        .detail-label {
+          font-weight: 500 !important;
         }
 
         .footer-text {
@@ -188,7 +203,13 @@ const newLoginAlertTemplete = (
     </style>
   </head>
 
-  <body style="margin: 0; padding: 0; background: #ffffff;">
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+    "
+  >
     <table
       role="presentation"
       width="100%"
@@ -224,6 +245,8 @@ const newLoginAlertTemplete = (
               margin: 0 auto;
             "
           >
+
+            <!-- DevTinder Logo -->
             <tr>
               <td
                 class="top-mark"
@@ -243,6 +266,7 @@ const newLoginAlertTemplete = (
                   "
                 >
                   <tr>
+
                     <td
                       valign="middle"
                       style="
@@ -301,11 +325,13 @@ const newLoginAlertTemplete = (
                         "
                       />
                     </td>
+
                   </tr>
                 </table>
               </td>
             </tr>
 
+            <!-- Heading -->
             <tr>
               <td
                 class="heading"
@@ -329,6 +355,7 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
+            <!-- Greeting -->
             <tr>
               <td style="padding: 26px 0 0 0;">
                 <p
@@ -348,12 +375,13 @@ const newLoginAlertTemplete = (
                       font-weight: 500;
                     "
                   >
-                    ${name || "there"}
-                  </strong>.
+                    ${name || "there"}.
+                  </strong>
                 </p>
               </td>
             </tr>
 
+            <!-- Description -->
             <tr>
               <td style="padding: 18px 0 0 0;">
                 <p
@@ -373,8 +401,10 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
+            <!-- Sign-in Details -->
             <tr>
               <td style="padding: 14px 0 0 0;">
+
                 <p
                   class="detail-text"
                   style="
@@ -388,7 +418,7 @@ const newLoginAlertTemplete = (
                 >
                   <strong
                     class="detail-label"
-                    style="font-weight: 600;"
+                    style="font-weight: 500;"
                   >
                     Location:
                   </strong>
@@ -408,7 +438,7 @@ const newLoginAlertTemplete = (
                 >
                   <strong
                     class="detail-label"
-                    style="font-weight: 600;"
+                    style="font-weight: 500;"
                   >
                     Time:
                   </strong>
@@ -428,7 +458,7 @@ const newLoginAlertTemplete = (
                 >
                   <strong
                     class="detail-label"
-                    style="font-weight: 600;"
+                    style="font-weight: 500;"
                   >
                     Browser:
                   </strong>
@@ -448,7 +478,7 @@ const newLoginAlertTemplete = (
                 >
                   <strong
                     class="detail-label"
-                    style="font-weight: 600;"
+                    style="font-weight: 500;"
                   >
                     Device:
                   </strong>
@@ -468,15 +498,17 @@ const newLoginAlertTemplete = (
                 >
                   <strong
                     class="detail-label"
-                    style="font-weight: 600;"
+                    style="font-weight: 500;"
                   >
                     IP:
                   </strong>
                   ${ip || "Unknown"}
                 </p>
+
               </td>
             </tr>
 
+            <!-- Security Question -->
             <tr>
               <td style="padding: 23px 0 0 0;">
                 <p
@@ -495,6 +527,7 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
+            <!-- Security Link -->
             <tr>
               <td style="padding: 8px 0 0 0;">
                 <p
@@ -510,7 +543,10 @@ const newLoginAlertTemplete = (
                 >
                   Review your
                   <a
-                    href="${reset_link || `${process.env.DOMAIN_LINK}/account/reset-password`}"
+                    href="${
+                      reset_link ||
+                      `${process.env.DOMAIN_LINK}/account/reset-password`
+                    }"
                     style="
                       color: #0070f3;
                       text-decoration: none;
@@ -523,6 +559,7 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
+            <!-- Explanation -->
             <tr>
               <td style="padding: 18px 0 0 0;">
                 <p
@@ -544,6 +581,7 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
+            <!-- Divider -->
             <tr>
               <td style="padding: 40px 0 0 0;">
                 <table
@@ -570,6 +608,7 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
+            <!-- Footer -->
             <tr>
               <td
                 class="footer"
@@ -637,6 +676,7 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
+            <!-- Bottom Space -->
             <tr>
               <td
                 style="
@@ -648,6 +688,7 @@ const newLoginAlertTemplete = (
                 &nbsp;
               </td>
             </tr>
+
           </table>
         </td>
       </tr>

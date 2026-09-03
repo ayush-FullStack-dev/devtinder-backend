@@ -289,12 +289,14 @@ export const verifyTwoFAHandler = async (req, res) => {
     { id: true },
   );
 
-  await sendLoginAlert(user.email, {
-    name: updatedUser.name,
-    ...deviceInfo,
-    deviceName: userInfo.deviceName,
-  });
-  
+  if (["mid", "high", "veryhigh"].includes(info.risk)) {
+    await sendLoginAlert(user.email, {
+      name: updatedUser.name,
+      ...deviceInfo,
+      deviceName: userInfo.deviceName,
+    });
+  }
+
   return res
     .status(200)
     .clearCookie("twoFA_ctx", cookieOption)
