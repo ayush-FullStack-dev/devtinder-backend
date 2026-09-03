@@ -1,5 +1,3 @@
-import config from "../../config/config.js";
-
 const newLoginAlertTemplete = (
   name,
   ip,
@@ -118,6 +116,32 @@ const newLoginAlertTemplete = (
         text-align: center;
       }
 
+      .body-text {
+        font-size: 15px;
+        line-height: 23px;
+        font-weight: 400;
+        color: #171717;
+      }
+
+      .detail-text {
+        font-size: 15px;
+        line-height: 23px;
+        font-weight: 400;
+        color: #171717;
+      }
+
+      .detail-label {
+        font-weight: 600;
+      }
+
+      .footer-text {
+        font-size: 13px;
+        line-height: 20px;
+        font-weight: 400;
+        color: #737373;
+        text-align: center;
+      }
+
       @media screen and (max-width: 640px) {
         .outer-cell {
           padding-left: 20px !important;
@@ -137,21 +161,23 @@ const newLoginAlertTemplete = (
         }
 
         .top-mark {
-          padding-top: 26px !important;
+          padding-top: 24px !important;
         }
 
         .heading {
-          padding-top: 46px !important;
+          padding-top: 44px !important;
         }
 
         .heading h1 {
-          font-size: 22px !important;
-          line-height: 29px !important;
+          font-size: 21px !important;
+          line-height: 28px !important;
+          font-weight: 400 !important;
         }
 
-        .body-text {
-          font-size: 16px !important;
-          line-height: 24px !important;
+        .body-text,
+        .detail-text {
+          font-size: 15px !important;
+          line-height: 23px !important;
         }
 
         .footer-text {
@@ -170,14 +196,19 @@ const newLoginAlertTemplete = (
       cellspacing="0"
       border="0"
       class="email-wrapper"
-      style="width: 100%; background: #ffffff;"
+      style="
+        width: 100%;
+        background: #ffffff;
+      "
     >
       <tr>
         <td
           align="center"
           valign="top"
           class="outer-cell"
-          style="padding: 0 24px;"
+          style="
+            padding: 0 24px;
+          "
         >
           <table
             role="presentation"
@@ -187,40 +218,47 @@ const newLoginAlertTemplete = (
             border="0"
             align="center"
             class="email-container"
-            style="width: 600px; max-width: 100%; margin: 0 auto;"
+            style="
+              width: 600px;
+              max-width: 100%;
+              margin: 0 auto;
+            "
           >
-
-            <!-- Logo -->
             <tr>
               <td
                 class="top-mark"
-                style="padding: 28px 0 0 0;"
+                style="
+                  padding: 26px 0 0 0;
+                  line-height: 0;
+                "
               >
                 <table
                   role="presentation"
                   cellpadding="0"
                   cellspacing="0"
                   border="0"
+                  style="
+                    border-collapse: collapse;
+                    border-spacing: 0;
+                  "
                 >
                   <tr>
-
-                    <!-- DevTinder Logo Mark -->
                     <td
                       valign="middle"
                       style="
                         padding: 0;
                         vertical-align: middle;
+                        line-height: 0;
                       "
                     >
                       <img
                         src="https://devtinder.tech/brand/logo/logo-mark-monochrome.svg"
                         alt="DevTinder"
-                        width="56"
-                        height="56"
+                        width="50"
                         style="
                           display: block;
                           width: 50px;
-                          height: 50px;
+                          height: auto;
                           border: 0;
                           outline: none;
                           text-decoration: none;
@@ -228,10 +266,12 @@ const newLoginAlertTemplete = (
                       />
                     </td>
 
-                    <!-- Spacing -->
                     <td
+                      width="14"
                       style="
-                        width: 15px;
+                        width: 14px;
+                        min-width: 14px;
+                        padding: 0;
                         font-size: 0;
                         line-height: 0;
                       "
@@ -239,49 +279,48 @@ const newLoginAlertTemplete = (
                       &nbsp;
                     </td>
 
-                    <!-- DevTinder Wordmark -->
                     <td
                       valign="middle"
                       style="
                         padding: 0;
                         vertical-align: middle;
+                        line-height: 0;
                       "
                     >
                       <img
                         src="https://devtinder.tech/brand/logo/monochrome-wordmark.svg"
                         alt="DevTinder"
                         width="150"
-                        height="60"
                         style="
                           display: block;
-                          width: 100px;
-                          height: 60px;
+                          width: 150px;
+                          height: auto;
                           border: 0;
                           outline: none;
                           text-decoration: none;
                         "
                       />
                     </td>
-
                   </tr>
                 </table>
               </td>
             </tr>
 
-            <!-- Heading -->
             <tr>
               <td
                 class="heading"
-                style="padding: 52px 0 0 0;"
+                style="
+                  padding: 48px 0 0 0;
+                "
               >
                 <h1
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 23px;
-                    line-height: 30px;
-                    font-weight: 500;
-                    letter-spacing: -0.45px;
+                    font-size: 22px;
+                    line-height: 29px;
+                    font-weight: 400;
+                    letter-spacing: -0.35px;
                     color: #171717;
                   "
                 >
@@ -290,38 +329,40 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
-            <!-- Greeting -->
             <tr>
-              <td style="padding: 28px 0 0 0;">
+              <td style="padding: 26px 0 0 0;">
                 <p
                   class="body-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
                     font-weight: 400;
                     color: #171717;
                   "
                 >
                   Hello,
-                  <strong style="font-weight: 600;">
+                  <strong
+                    style="
+                      font-weight: 500;
+                    "
+                  >
                     ${name || "there"}
                   </strong>.
                 </p>
               </td>
             </tr>
 
-            <!-- Description -->
             <tr>
-              <td style="padding: 20px 0 0 0;">
+              <td style="padding: 18px 0 0 0;">
                 <p
                   class="body-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
                     font-weight: 400;
                     color: #171717;
                   "
@@ -332,98 +373,119 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
-            <!-- Sign-in Details -->
             <tr>
-              <td style="padding: 16px 0 0 0;">
-
-                <!-- Location -->
+              <td style="padding: 14px 0 0 0;">
                 <p
-                  class="body-text"
+                  class="detail-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
+                    font-weight: 400;
                     color: #171717;
                   "
                 >
-                  <strong style="font-weight: 600;">Location:</strong>
+                  <strong
+                    class="detail-label"
+                    style="font-weight: 600;"
+                  >
+                    Location:
+                  </strong>
                   ${location || "Unknown"}
                 </p>
 
-                <!-- Time -->
                 <p
-                  class="body-text"
+                  class="detail-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
+                    font-weight: 400;
                     color: #171717;
                   "
                 >
-                  <strong style="font-weight: 600;">Time:</strong>
+                  <strong
+                    class="detail-label"
+                    style="font-weight: 600;"
+                  >
+                    Time:
+                  </strong>
                   ${time || "Unknown"}
                 </p>
 
-                <!-- Browser -->
                 <p
-                  class="body-text"
+                  class="detail-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
+                    font-weight: 400;
                     color: #171717;
                   "
                 >
-                  <strong style="font-weight: 600;">Browser:</strong>
+                  <strong
+                    class="detail-label"
+                    style="font-weight: 600;"
+                  >
+                    Browser:
+                  </strong>
                   ${browser || "Unknown"}
                 </p>
 
-                <!-- Device -->
                 <p
-                  class="body-text"
+                  class="detail-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
+                    font-weight: 400;
                     color: #171717;
                   "
                 >
-                  <strong style="font-weight: 600;">Device:</strong>
+                  <strong
+                    class="detail-label"
+                    style="font-weight: 600;"
+                  >
+                    Device:
+                  </strong>
                   ${device || "Unknown"}
                 </p>
 
-                <!-- IP -->
                 <p
-                  class="body-text"
+                  class="detail-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
+                    font-weight: 400;
                     color: #171717;
                   "
                 >
-                  <strong style="font-weight: 600;">IP:</strong>
+                  <strong
+                    class="detail-label"
+                    style="font-weight: 600;"
+                  >
+                    IP:
+                  </strong>
                   ${ip || "Unknown"}
                 </p>
-
               </td>
             </tr>
 
-            <!-- Security Alert -->
             <tr>
-              <td style="padding: 25px 0 0 0;">
+              <td style="padding: 23px 0 0 0;">
                 <p
                   class="body-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
                     font-weight: 600;
                     color: #171717;
                   "
@@ -433,23 +495,22 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
-            <!-- Security Link -->
             <tr>
-              <td style="padding: 10px 0 0 0;">
+              <td style="padding: 8px 0 0 0;">
                 <p
                   class="body-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
                     font-weight: 400;
                     color: #171717;
                   "
                 >
                   Review your
                   <a
-                    href="${reset_link || `${process.env.DOMAIN_LINK}/reset-password`}"
+                    href="${reset_link || `${process.env.DOMAIN_LINK}/account/reset-password`}"
                     style="
                       color: #0070f3;
                       text-decoration: none;
@@ -462,16 +523,15 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
-            <!-- Explanation -->
             <tr>
-              <td style="padding: 20px 0 0 0;">
+              <td style="padding: 18px 0 0 0;">
                 <p
                   class="body-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 16px;
-                    line-height: 24px;
+                    font-size: 15px;
+                    line-height: 23px;
                     font-weight: 400;
                     color: #171717;
                   "
@@ -484,9 +544,8 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
-            <!-- Divider -->
             <tr>
-              <td style="padding: 44px 0 0 0;">
+              <td style="padding: 40px 0 0 0;">
                 <table
                   role="presentation"
                   width="100%"
@@ -511,24 +570,22 @@ const newLoginAlertTemplete = (
               </td>
             </tr>
 
-            <!-- Footer -->
             <tr>
               <td
                 class="footer"
                 style="
-                  padding: 32px 0 0 0;
+                  padding: 28px 0 0 0;
                   text-align: center;
                 "
               >
-
-                <!-- Legal Links -->
                 <p
                   class="footer-text"
                   style="
                     margin: 0;
                     padding: 0;
-                    font-size: 14px;
-                    line-height: 21px;
+                    font-size: 13px;
+                    line-height: 20px;
+                    font-weight: 400;
                     color: #737373;
                     text-align: center;
                   "
@@ -563,29 +620,27 @@ const newLoginAlertTemplete = (
                   </a>
                 </p>
 
-                <!-- Copyright -->
                 <p
                   class="footer-text"
                   style="
-                    margin: 8px 0 0 0;
+                    margin: 7px 0 0 0;
                     padding: 0;
-                    font-size: 14px;
-                    line-height: 21px;
+                    font-size: 13px;
+                    line-height: 20px;
+                    font-weight: 400;
                     color: #737373;
                     text-align: center;
                   "
                 >
                   Copyright © 2026 DevTinder. All rights reserved.
                 </p>
-
               </td>
             </tr>
 
-            <!-- Bottom Spacing -->
             <tr>
               <td
                 style="
-                  height: 40px;
+                  height: 36px;
                   font-size: 0;
                   line-height: 0;
                 "
@@ -593,7 +648,6 @@ const newLoginAlertTemplete = (
                 &nbsp;
               </td>
             </tr>
-
           </table>
         </td>
       </tr>
