@@ -1,3 +1,5 @@
+import config from "../../config/config.js";
+
 const newLoginAlertTemplete = (
   name,
   ip,
@@ -9,1248 +11,594 @@ const newLoginAlertTemplete = (
 ) => {
   const html = `<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-
-  <meta
-    http-equiv="X-UA-Compatible"
-    content="IE=edge"
-  >
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <meta
-    name="format-detection"
-    content="telephone=no,address=no,email=no,date=no,url=no"
-  >
-
-  <title>DevTinder — New Sign-In Alert</title>
-
-  <!--[if mso]>
-  <style type="text/css">
-    table,
-    td {
-      border-collapse: collapse !important;
-    }
-
-    body,
-    table,
-    td,
-    p,
-    a {
-      font-family: Arial, Helvetica, sans-serif !important;
-    }
-  </style>
-  <![endif]-->
-
-  <style type="text/css">
-
-    /* =========================================================
-       RESET
-    ========================================================= */
-
-    html,
-    body {
-      width: 100% !important;
-      min-width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      background-color: #f4f5f7;
-    }
-
-    body {
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-      font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-    }
-
-    table {
-      border-spacing: 0;
-      border-collapse: collapse;
-      mso-table-lspace: 0pt;
-      mso-table-rspace: 0pt;
-    }
-
-    td {
-      border-collapse: collapse;
-      mso-table-lspace: 0pt;
-      mso-table-rspace: 0pt;
-    }
-
-    img {
-      display: block;
-      border: 0;
-      outline: none;
-      text-decoration: none;
-      -ms-interpolation-mode: bicubic;
-    }
-
-    a {
-      color: inherit;
-    }
-
-    p {
-      margin: 0;
-    }
-
-    * {
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-    }
-
-
-    /* =========================================================
-       OUTER WRAPPER
-    ========================================================= */
-
-    .email-wrapper {
-      width: 100%;
-      background-color: #f4f5f7;
-    }
-
-    .outer-cell {
-      padding: 48px 24px;
-    }
-
-
-    /* =========================================================
-       MAIN CONTAINER
-    ========================================================= */
-
-    .email-container {
-      width: 100%;
-      max-width: 640px;
-
-      background-color: #ffffff;
-
-      border: 1px solid #e1e4e8;
-      border-radius: 16px;
-
-      overflow: hidden;
-
-      box-shadow:
-        0 2px 5px rgba(16, 24, 40, 0.03),
-        0 12px 32px rgba(16, 24, 40, 0.06);
-    }
-
-
-    /* =========================================================
-       HEADER
-    ========================================================= */
-
-    .header-cell {
-      padding: 34px 42px 30px;
-      background-color: #ffffff;
-    }
-
-    .brand-table {
-      width: auto;
-    }
-
-    .brand-logo-cell {
-      padding: 0 14px 0 0;
-      vertical-align: middle;
-    }
-
-    .brand-logo {
-      width: 48px;
-      height: auto;
-    }
-
-    .brand-name-cell {
-      vertical-align: middle;
-      padding: 0;
-    }
-
-    .brand-wordmark {
-      display: block;
-      width: 174px;
-      height: auto;
-    }
-
-
-    /* =========================================================
-       DIVIDER
-    ========================================================= */
-
-    .divider {
-      width: 100%;
-      height: 1px;
-      background-color: #e7e9ec;
-      line-height: 1px;
-      font-size: 1px;
-    }
-
-
-    /* =========================================================
-       CONTENT
-    ========================================================= */
-
-    .content-cell {
-      padding: 42px 42px 44px;
-
-      font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-
-      font-size: 16px;
-      line-height: 1.65;
-
-      color: #30343a;
-    }
-
-
-    /* =========================================================
-       GREETING
-    ========================================================= */
-
-    .greeting {
-      margin: 0 0 20px;
-
-      font-size: 17px;
-      line-height: 1.55;
-
-      font-weight: 500;
-
-      color: #17191c;
-    }
-
-
-    /* =========================================================
-       INTRO
-    ========================================================= */
-
-    .intro {
-      margin: 0 0 38px;
-
-      font-size: 17px;
-      line-height: 1.65;
-
-      font-weight: 400;
-
-      color: #30343a;
-    }
-
-    .intro strong {
-      font-weight: 700;
-      color: #17191c;
-    }
-
-
-    /* =========================================================
-       SIGN-IN INFORMATION
-    ========================================================= */
-
-    .info-table {
-      width: auto;
-
-      font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-
-      font-size: 15.5px;
-      line-height: 1.55;
-
-      color: #30343a;
-    }
-
-    .info-label {
-      padding: 0 16px 11px 0;
-
-      font-weight: 700;
-
-      color: #16181b;
-
-      white-space: nowrap;
-    }
-
-    .info-value {
-      padding: 0 0 11px;
-
-      font-weight: 400;
-
-      color: #4b5057;
-    }
-
-    .info-label-last {
-      padding: 0 16px 0 0;
-
-      font-weight: 700;
-
-      color: #16181b;
-
-      white-space: nowrap;
-    }
-
-    .info-value-last {
-      padding: 0;
-
-      font-weight: 400;
-
-      color: #4b5057;
-    }
-
-
-    /* =========================================================
-       SECURITY COPY
-    ========================================================= */
-
-    .safe-message {
-      margin: 48px 0 20px;
-
-      font-size: 16px;
-      line-height: 1.65;
-
-      font-weight: 500;
-
-      color: #30343a;
-    }
-
-    .security-message {
-      margin: 0 0 44px;
-
-      font-size: 16px;
-      line-height: 1.65;
-
-      font-weight: 400;
-
-      color: #30343a;
-    }
-
-    .security-link {
-      color: #181a1d;
-      font-weight: 650;
-
-      text-decoration: underline;
-      text-decoration-thickness: 1px;
-      text-underline-offset: 3px;
-    }
-
-
-    /* =========================================================
-       SIGNATURE
-    ========================================================= */
-
-    .signature {
-      font-size: 16px;
-      line-height: 1.6;
-
-      font-weight: 400;
-
-      color: #30343a;
-    }
-
-    .signature strong {
-      font-weight: 700;
-      color: #17191c;
-    }
-
-    .signature .team {
-      font-style: italic;
-      font-weight: 500;
-      color: #555a61;
-    }
-
-
-    /* =========================================================
-       FOOTER
-    ========================================================= */
-
-    .footer-divider {
-      padding: 0 42px;
-    }
-
-    .footer-cell {
-      padding: 24px 42px 34px;
-
-      font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-
-      font-size: 13px;
-      line-height: 1.55;
-
-      color: #777c83;
-    }
-
-
-    /* =========================================================
-       TABLET
-    ========================================================= */
-
-    @media screen and (max-width: 680px) {
-
-      .outer-cell {
-        padding: 30px 16px !important;
-      }
-
-      .email-container {
-        max-width: 100% !important;
-      }
-
-      .header-cell {
-        padding: 32px 32px 28px !important;
-      }
-
-      .content-cell {
-        padding: 38px 32px 40px !important;
-      }
-
-      .footer-divider {
-        padding: 0 32px !important;
-      }
-
-      .footer-cell {
-        padding: 23px 32px 32px !important;
-      }
-
-      .brand-logo {
-        width: 46px !important;
-      }
-
-      .brand-wordmark {
-        width: 165px !important;
-      }
-    }
-
-
-    /* =========================================================
-       MOBILE
-    ========================================================= */
-
-    @media screen and (max-width: 600px) {
-
-      .outer-cell {
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <meta
+      name="format-detection"
+      content="telephone=no,address=no,email=no,date=no,url=no"
+    />
+
+    <title>DevTinder — New Sign-In Alert</title>
+
+    <!--[if mso]>
+      <style type="text/css">
+        table,
+        td {
+          border-collapse: collapse !important;
+        }
+
+        body,
+        table,
+        td,
+        p,
+        a {
+          font-family: Arial, Helvetica, sans-serif !important;
+        }
+      </style>
+    <![endif]-->
+
+    <style type="text/css">
+      html,
+      body {
+        width: 100% !important;
+        min-width: 100% !important;
+        margin: 0 !important;
         padding: 0 !important;
+        background: #ffffff !important;
+      }
+
+      body {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        font-family:
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        color: #171717;
+      }
+
+      table {
+        border-spacing: 0;
+        border-collapse: collapse;
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+
+      td {
+        border-collapse: collapse;
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+
+      p,
+      h1 {
+        margin: 0;
+        padding: 0;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      img {
+        display: block;
+        border: 0;
+        outline: none;
+        text-decoration: none;
+        -ms-interpolation-mode: bicubic;
+      }
+
+      * {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+
+      .email-wrapper {
+        width: 100%;
+        background: #ffffff;
       }
 
       .email-container {
-        width: 100% !important;
-        max-width: 100% !important;
-
-        border-left: 0 !important;
-        border-right: 0 !important;
-
-        border-radius: 0 !important;
-
-        box-shadow: none !important;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
       }
 
-      .header-cell {
-        padding: 28px 24px 25px !important;
+      .footer {
+        text-align: center;
       }
 
-      .brand-logo-cell {
-        padding-right: 11px !important;
+      @media screen and (max-width: 640px) {
+        .outer-cell {
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+        }
+
+        .email-container {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
       }
 
-      .brand-logo {
-        width: 44px !important;
+      @media screen and (max-width: 480px) {
+        .outer-cell {
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+        }
+
+        .top-mark {
+          padding-top: 26px !important;
+        }
+
+        .heading {
+          padding-top: 46px !important;
+        }
+
+        .heading h1 {
+          font-size: 22px !important;
+          line-height: 29px !important;
+        }
+
+        .body-text {
+          font-size: 16px !important;
+          line-height: 24px !important;
+        }
+
+        .footer-text {
+          font-size: 13px !important;
+          line-height: 20px !important;
+        }
       }
+    </style>
+  </head>
 
-      .brand-wordmark {
-        width: 150px !important;
-        max-width: 100% !important;
-      }
-
-      .content-cell {
-        padding: 34px 24px 35px !important;
-
-        font-size: 16px !important;
-        line-height: 1.65 !important;
-      }
-
-      .greeting {
-        margin-bottom: 19px !important;
-        font-size: 16.5px !important;
-      }
-
-      .intro {
-        margin-bottom: 34px !important;
-        font-size: 16.5px !important;
-      }
-
-      .info-table {
-        width: 100% !important;
-        font-size: 15px !important;
-      }
-
-      .info-label,
-      .info-label-last {
-        padding-right: 9px !important;
-      }
-
-      .info-value,
-      .info-value-last {
-        word-break: break-word !important;
-      }
-
-      .safe-message {
-        margin-top: 43px !important;
-        margin-bottom: 19px !important;
-        font-size: 15.5px !important;
-      }
-
-      .security-message {
-        margin-bottom: 39px !important;
-        font-size: 15.5px !important;
-      }
-
-      .signature {
-        font-size: 15.5px !important;
-      }
-
-      .footer-divider {
-        padding: 0 24px !important;
-      }
-
-      .footer-cell {
-        padding: 22px 24px 30px !important;
-        font-size: 12.5px !important;
-      }
-    }
-
-
-    /* =========================================================
-       SMALL PHONES
-    ========================================================= */
-
-    @media screen and (max-width: 420px) {
-
-      .header-cell {
-        padding: 25px 20px 23px !important;
-      }
-
-      .brand-logo-cell {
-        padding-right: 9px !important;
-      }
-
-      .brand-logo {
-        width: 40px !important;
-      }
-
-      .brand-wordmark {
-        width: 136px !important;
-      }
-
-      .content-cell {
-        padding: 30px 20px 32px !important;
-      }
-
-      .greeting {
-        font-size: 16px !important;
-      }
-
-      .intro {
-        font-size: 16px !important;
-      }
-
-      .info-table {
-        font-size: 14.5px !important;
-      }
-
-      .info-label,
-      .info-label-last {
-        padding-right: 7px !important;
-      }
-
-      .safe-message,
-      .security-message,
-      .signature {
-        font-size: 15px !important;
-      }
-
-      .footer-divider {
-        padding: 0 20px !important;
-      }
-
-      .footer-cell {
-        padding: 21px 20px 28px !important;
-      }
-    }
-
-
-    /* =========================================================
-       VERY SMALL PHONES
-    ========================================================= */
-
-    @media screen and (max-width: 350px) {
-
-      .brand-logo {
-        width: 36px !important;
-      }
-
-      .brand-wordmark {
-        width: 120px !important;
-      }
-
-      .info-table {
-        font-size: 14px !important;
-      }
-
-      .info-label,
-      .info-label-last {
-        padding-right: 5px !important;
-      }
-    }
-
-  </style>
-</head>
-
-
-<body
-  style="
-    margin:0;
-    padding:0;
-    width:100%;
-    background-color:#f4f5f7;
-  "
->
-
-  <!-- =======================================================
-       OUTER WRAPPER
-  ======================================================== -->
-
-  <table
-    role="presentation"
-    width="100%"
-    cellpadding="0"
-    cellspacing="0"
-    border="0"
-    class="email-wrapper"
-    style="
-      width:100%;
-      background-color:#f4f5f7;
-    "
-  >
-
-    <tr>
-
-      <td
-        align="center"
-        valign="top"
-        class="outer-cell"
-        style="
-          padding:48px 24px;
-        "
-      >
-
-        <!--[if mso]>
-        <table
-          role="presentation"
-          width="640"
+  <body style="margin: 0; padding: 0; background: #ffffff;">
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      class="email-wrapper"
+      style="width: 100%; background: #ffffff;"
+    >
+      <tr>
+        <td
           align="center"
-          cellpadding="0"
-          cellspacing="0"
-          border="0"
+          valign="top"
+          class="outer-cell"
+          style="padding: 0 24px;"
         >
-          <tr>
-            <td>
-        <![endif]-->
+          <table
+            role="presentation"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            align="center"
+            class="email-container"
+            style="width: 600px; max-width: 100%; margin: 0 auto;"
+          >
 
-
-        <!-- =================================================
-             EMAIL CONTAINER
-        ================================================== -->
-
-        <table
-          role="presentation"
-          width="100%"
-          cellpadding="0"
-          cellspacing="0"
-          border="0"
-          align="center"
-          class="email-container"
-          style="
-            width:100%;
-            max-width:640px;
-            background-color:#ffffff;
-            border:1px solid #e1e4e8;
-            border-radius:16px;
-            overflow:hidden;
-          "
-        >
-
-          <tr>
-
-            <td
-              valign="top"
-              style="
-                background-color:#ffffff;
-              "
-            >
-
-
-              <!-- ===========================================
-                   HEADER
-              ============================================ -->
-
-              <table
-                role="presentation"
-                width="100%"
-                cellpadding="0"
-                cellspacing="0"
-                border="0"
+            <!-- Logo -->
+            <tr>
+              <td
+                class="top-mark"
+                style="padding: 28px 0 0 0;"
               >
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                >
+                  <tr>
 
-                <tr>
-
-                  <td
-                    class="header-cell"
-                    style="
-                      padding:34px 42px 30px;
-                    "
-                  >
-
-                    <table
-                      role="presentation"
-                      cellpadding="0"
-                      cellspacing="0"
-                      border="0"
-                      class="brand-table"
-                    >
-
-                      <tr>
-
-                        <!-- LOGO MARK -->
-
-                        <td
-                          class="brand-logo-cell"
-                          valign="middle"
-                          style="
-                            padding:0 14px 0 0;
-                            vertical-align:middle;
-                          "
-                        >
-
-                          <img
-                            src="https://devtinder.tech/brand/logo/logo-mark-monochrome.svg"
-                            width="48"
-                            alt=""
-                            class="brand-logo"
-                            style="
-                              display:block;
-                              width:48px;
-                              height:auto;
-                              border:0;
-                              outline:none;
-                              text-decoration:none;
-                            "
-                          >
-
-                        </td>
-
-
-                        <!-- WORDMARK -->
-
-                        <td
-                          class="brand-name-cell"
-                          valign="middle"
-                          style="
-                            vertical-align:middle;
-                            padding:0;
-                          "
-                        >
-
-                          <img
-                            src="https://devtinder.tech/brand/logo/monochrome-wordmark.svg"
-                            width="174"
-                            alt="DevTinder"
-                            class="brand-wordmark"
-                            style="
-                              display:block;
-                              width:174px;
-                              height:auto;
-                              border:0;
-                              outline:none;
-                              text-decoration:none;
-                            "
-                          >
-
-                        </td>
-
-                      </tr>
-
-                    </table>
-
-                  </td>
-
-                </tr>
-
-              </table>
-
-
-              <!-- ===========================================
-                   HEADER DIVIDER
-              ============================================ -->
-
-              <table
-                role="presentation"
-                width="100%"
-                cellpadding="0"
-                cellspacing="0"
-                border="0"
-              >
-
-                <tr>
-
-                  <td
-                    class="divider"
-                    height="1"
-                    style="
-                      width:100%;
-                      height:1px;
-                      line-height:1px;
-                      font-size:1px;
-                      background-color:#e7e9ec;
-                    "
-                  >
-                    &nbsp;
-                  </td>
-
-                </tr>
-
-              </table>
-
-
-              <!-- ===========================================
-                   BODY CONTENT
-              ============================================ -->
-
-              <table
-                role="presentation"
-                width="100%"
-                cellpadding="0"
-                cellspacing="0"
-                border="0"
-              >
-
-                <tr>
-
-                  <td
-                    class="content-cell"
-                    style="
-                      padding:42px 42px 44px;
-                      font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-                      font-size:16px;
-                      line-height:1.65;
-                      font-weight:400;
-                      color:#30343a;
-                    "
-                  >
-
-                    <!-- GREETING -->
-
-                    <p
-                      class="greeting"
+                    <!-- DevTinder Logo Mark -->
+                    <td
+                      valign="middle"
                       style="
-                        margin:0 0 20px;
-                        font-size:17px;
-                        line-height:1.55;
-                        font-weight:500;
-                        color:#17191c;
+                        padding: 0;
+                        vertical-align: middle;
                       "
                     >
-                      Hello${name ? `, ${name}` : ""}!
-                    </p>
-
-
-                    <!-- INTRO -->
-
-                    <p
-                      class="intro"
-                      style="
-                        margin:0 0 38px;
-                        font-size:17px;
-                        line-height:1.65;
-                        font-weight:400;
-                        color:#30343a;
-                      "
-                    >
-                      We noticed a new sign-in to your
-                      <strong
+                      <img
+                        src="https://devtinder.tech/brand/logo/logo-mark-monochrome.svg"
+                        alt="DevTinder"
+                        width="56"
+                        height="56"
                         style="
-                          font-weight:700;
-                          color:#17191c;
+                          display: block;
+                          width: 50px;
+                          height: 50px;
+                          border: 0;
+                          outline: none;
+                          text-decoration: none;
                         "
-                      >
-                        DevTinder
-                      </strong>
-                      account.
-                    </p>
+                      />
+                    </td>
 
-
-                    <!-- =====================================
-                         SIGN-IN DETAILS
-                    ====================================== -->
-
-                    <table
-                      role="presentation"
-                      cellpadding="0"
-                      cellspacing="0"
-                      border="0"
-                      class="info-table"
+                    <!-- Spacing -->
+                    <td
                       style="
-                        width:auto;
-                        font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-                        font-size:15.5px;
-                        line-height:1.55;
-                        color:#30343a;
-                      "
-                    >
-
-                      <tr>
-
-                        <td
-                          class="info-label"
-                          style="
-                            padding:0 16px 11px 0;
-                            font-weight:700;
-                            color:#16181b;
-                            white-space:nowrap;
-                          "
-                        >
-                          App:
-                        </td>
-
-                        <td
-                          class="info-value"
-                          style="
-                            padding:0 0 11px;
-                            font-weight:400;
-                            color:#4b5057;
-                          "
-                        >
-                          DevTinder Web
-                        </td>
-
-                      </tr>
-
-
-                      <tr>
-
-                        <td
-                          class="info-label"
-                          style="
-                            padding:0 16px 11px 0;
-                            font-weight:700;
-                            color:#16181b;
-                            white-space:nowrap;
-                          "
-                        >
-                          Time:
-                        </td>
-
-                        <td
-                          class="info-value"
-                          style="
-                            padding:0 0 11px;
-                            font-weight:400;
-                            color:#4b5057;
-                          "
-                        >
-                          ${time || "Unknown"}
-                        </td>
-
-                      </tr>
-
-
-                      <tr>
-
-                        <td
-                          class="info-label"
-                          style="
-                            padding:0 16px 11px 0;
-                            font-weight:700;
-                            color:#16181b;
-                            white-space:nowrap;
-                          "
-                        >
-                          Location:
-                        </td>
-
-                        <td
-                          class="info-value"
-                          style="
-                            padding:0 0 11px;
-                            font-weight:400;
-                            color:#4b5057;
-                          "
-                        >
-                          ${location || "Unknown"}
-                        </td>
-
-                      </tr>
-
-
-                      <tr>
-
-                        <td
-                          class="info-label"
-                          style="
-                            padding:0 16px 11px 0;
-                            font-weight:700;
-                            color:#16181b;
-                            white-space:nowrap;
-                          "
-                        >
-                          IP Address:
-                        </td>
-
-                        <td
-                          class="info-value"
-                          style="
-                            padding:0 0 11px;
-                            font-weight:400;
-                            color:#4b5057;
-                          "
-                        >
-                          ${ip || "Unknown"}
-                        </td>
-
-                      </tr>
-
-
-                      <tr>
-
-                        <td
-                          class="info-label-last"
-                          style="
-                            padding:0 16px 0 0;
-                            font-weight:700;
-                            color:#16181b;
-                            white-space:nowrap;
-                          "
-                        >
-                          Device:
-                        </td>
-
-                        <td
-                          class="info-value-last"
-                          style="
-                            padding:0;
-                            font-weight:400;
-                            color:#4b5057;
-                          "
-                        >
-                          ${device || "Unknown"}
-                        </td>
-
-                      </tr>
-
-                    </table>
-
-
-                    <!-- SAFE MESSAGE -->
-
-                    <p
-                      class="safe-message"
-                      style="
-                        margin:48px 0 20px;
-                        font-size:16px;
-                        line-height:1.65;
-                        font-weight:500;
-                        color:#30343a;
-                      "
-                    >
-                      If this was you, no action is needed.
-                    </p>
-
-
-                    <!-- SECURITY MESSAGE -->
-
-                    <p
-                      class="security-message"
-                      style="
-                        margin:0 0 44px;
-                        font-size:16px;
-                        line-height:1.65;
-                        font-weight:400;
-                        color:#30343a;
-                      "
-                    >
-                      If you don't recognize this activity, please
-                      <a
-                        href="${reset_link || "#"}"
-                        class="security-link"
-                        style="
-                          color:#181a1d;
-                          font-weight:650;
-                          text-decoration:underline;
-                          text-decoration-thickness:1px;
-                          text-underline-offset:3px;
-                        "
-                      >
-                        review your account security
-                      </a>
-                      right away.
-                    </p>
-
-
-                    <!-- SIGNATURE -->
-
-                    <p
-                      class="signature"
-                      style="
-                        margin:0;
-                        font-size:16px;
-                        line-height:1.6;
-                        font-weight:400;
-                        color:#30343a;
-                      "
-                    >
-                      Thanks,<br>
-
-                      <strong
-                        style="
-                          font-weight:700;
-                          color:#17191c;
-                        "
-                      >
-                        DevTinder
-                      </strong>
-
-                      <span
-                        class="team"
-                        style="
-                          font-style:italic;
-                          font-weight:500;
-                          color:#555a61;
-                        "
-                      >
-                        Team
-                      </span>
-                    </p>
-
-                  </td>
-
-                </tr>
-
-              </table>
-
-
-              <!-- ===========================================
-                   FOOTER DIVIDER
-              ============================================ -->
-
-              <table
-                role="presentation"
-                width="100%"
-                cellpadding="0"
-                cellspacing="0"
-                border="0"
-              >
-
-                <tr>
-
-                  <td
-                    class="footer-divider"
-                    style="
-                      padding:0 42px;
-                    "
-                  >
-
-                    <div
-                      class="divider"
-                      style="
-                        width:100%;
-                        height:1px;
-                        line-height:1px;
-                        font-size:1px;
-                        background-color:#e7e9ec;
+                        width: 15px;
+                        font-size: 0;
+                        line-height: 0;
                       "
                     >
                       &nbsp;
-                    </div>
+                    </td>
 
-                  </td>
+                    <!-- DevTinder Wordmark -->
+                    <td
+                      valign="middle"
+                      style="
+                        padding: 0;
+                        vertical-align: middle;
+                      "
+                    >
+                      <img
+                        src="https://devtinder.tech/brand/logo/monochrome-wordmark.svg"
+                        alt="DevTinder"
+                        width="150"
+                        height="60"
+                        style="
+                          display: block;
+                          width: 100px;
+                          height: 60px;
+                          border: 0;
+                          outline: none;
+                          text-decoration: none;
+                        "
+                      />
+                    </td>
 
-                </tr>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-              </table>
-
-
-              <!-- ===========================================
-                   FOOTER
-              ============================================ -->
-
-              <table
-                role="presentation"
-                width="100%"
-                cellpadding="0"
-                cellspacing="0"
-                border="0"
+            <!-- Heading -->
+            <tr>
+              <td
+                class="heading"
+                style="padding: 52px 0 0 0;"
               >
+                <h1
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 23px;
+                    line-height: 30px;
+                    font-weight: 500;
+                    letter-spacing: -0.45px;
+                    color: #171717;
+                  "
+                >
+                  New sign-in detected on your DevTinder account
+                </h1>
+              </td>
+            </tr>
 
-                <tr>
+            <!-- Greeting -->
+            <tr>
+              <td style="padding: 28px 0 0 0;">
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    font-weight: 400;
+                    color: #171717;
+                  "
+                >
+                  Hello,
+                  <strong style="font-weight: 600;">
+                    ${name || "there"}
+                  </strong>.
+                </p>
+              </td>
+            </tr>
 
-                  <td
-                    class="footer-cell"
+            <!-- Description -->
+            <tr>
+              <td style="padding: 20px 0 0 0;">
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    font-weight: 400;
+                    color: #171717;
+                  "
+                >
+                  Your DevTinder account was recently signed-in from a new
+                  location, device or browser:
+                </p>
+              </td>
+            </tr>
+
+            <!-- Sign-in Details -->
+            <tr>
+              <td style="padding: 16px 0 0 0;">
+
+                <!-- Location -->
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    color: #171717;
+                  "
+                >
+                  <strong style="font-weight: 600;">Location:</strong>
+                  ${location || "Unknown"}
+                </p>
+
+                <!-- Time -->
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    color: #171717;
+                  "
+                >
+                  <strong style="font-weight: 600;">Time:</strong>
+                  ${time || "Unknown"}
+                </p>
+
+                <!-- Browser -->
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    color: #171717;
+                  "
+                >
+                  <strong style="font-weight: 600;">Browser:</strong>
+                  ${browser || "Unknown"}
+                </p>
+
+                <!-- Device -->
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    color: #171717;
+                  "
+                >
+                  <strong style="font-weight: 600;">Device:</strong>
+                  ${device || "Unknown"}
+                </p>
+
+                <!-- IP -->
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    color: #171717;
+                  "
+                >
+                  <strong style="font-weight: 600;">IP:</strong>
+                  ${ip || "Unknown"}
+                </p>
+
+              </td>
+            </tr>
+
+            <!-- Security Alert -->
+            <tr>
+              <td style="padding: 25px 0 0 0;">
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    font-weight: 600;
+                    color: #171717;
+                  "
+                >
+                  Don't recognize this activity?
+                </p>
+              </td>
+            </tr>
+
+            <!-- Security Link -->
+            <tr>
+              <td style="padding: 10px 0 0 0;">
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    font-weight: 400;
+                    color: #171717;
+                  "
+                >
+                  Review your
+                  <a
+                    href="${reset_link || `${process.env.DOMAIN_LINK}/reset-password`}"
                     style="
-                      padding:24px 42px 34px;
-                      font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-                      font-size:13px;
-                      line-height:1.55;
-                      font-weight:400;
-                      color:#777c83;
+                      color: #0070f3;
+                      text-decoration: none;
                     "
                   >
-                    This message was sent from DevTinder.
-                  </td>
+                    account security
+                  </a>
+                  now.
+                </p>
+              </td>
+            </tr>
 
-                </tr>
+            <!-- Explanation -->
+            <tr>
+              <td style="padding: 20px 0 0 0;">
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    font-weight: 400;
+                    color: #171717;
+                  "
+                >
+                  This alert triggers when we detect a sign-in from an
+                  unrecognized location, device, or browser. Common causes
+                  include traveling, using a VPN or Private Relay, or
+                  signing in from a new browser.
+                </p>
+              </td>
+            </tr>
 
-              </table>
+            <!-- Divider -->
+            <tr>
+              <td style="padding: 44px 0 0 0;">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                >
+                  <tr>
+                    <td
+                      style="
+                        width: 100%;
+                        height: 1px;
+                        border-top: 1px solid #eaeaea;
+                        font-size: 0;
+                        line-height: 0;
+                      "
+                    >
+                      &nbsp;
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-            </td>
+            <!-- Footer -->
+            <tr>
+              <td
+                class="footer"
+                style="
+                  padding: 32px 0 0 0;
+                  text-align: center;
+                "
+              >
 
-          </tr>
+                <!-- Legal Links -->
+                <p
+                  class="footer-text"
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 14px;
+                    line-height: 21px;
+                    color: #737373;
+                    text-align: center;
+                  "
+                >
+                  <a
+                    href="${process.env.DOMAIN_LINK}/terms"
+                    style="
+                      color: #737373;
+                      text-decoration: underline;
+                    "
+                  >
+                    Terms of Service
+                  </a>
 
-        </table>
+                  <span
+                    style="
+                      padding: 0 6px;
+                      color: #b5b5b5;
+                    "
+                  >
+                    ·
+                  </span>
 
+                  <a
+                    href="${process.env.DOMAIN_LINK}/privacy"
+                    style="
+                      color: #737373;
+                      text-decoration: underline;
+                    "
+                  >
+                    Privacy Policy
+                  </a>
+                </p>
 
-        <!--[if mso]>
-            </td>
-          </tr>
-        </table>
-        <![endif]-->
+                <!-- Copyright -->
+                <p
+                  class="footer-text"
+                  style="
+                    margin: 8px 0 0 0;
+                    padding: 0;
+                    font-size: 14px;
+                    line-height: 21px;
+                    color: #737373;
+                    text-align: center;
+                  "
+                >
+                  Copyright © 2026 DevTinder. All rights reserved.
+                </p>
 
-      </td>
+              </td>
+            </tr>
 
-    </tr>
+            <!-- Bottom Spacing -->
+            <tr>
+              <td
+                style="
+                  height: 40px;
+                  font-size: 0;
+                  line-height: 0;
+                "
+              >
+                &nbsp;
+              </td>
+            </tr>
 
-  </table>
-
-</body>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>`;
 
   return html;
