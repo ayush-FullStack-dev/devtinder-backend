@@ -64,7 +64,6 @@ export const validateRefreshToken = async (req, res, next) => {
 
   req.auth.user = user;
   req.auth.token = findedToken;
-
   return next();
 };
 
