@@ -11,7 +11,6 @@ import {
   calculateLoginRisk,
   resolveRiskLevel,
   buildVerifyDecisionResponse,
-  sendSecurityUpgrade,
 } from "../../../utils/security/loginRisk.js";
 import User from "../../../models/User.model.js";
 import PendingUser from "../../../models/PendingUser.model.js";
@@ -29,14 +28,9 @@ export const verifyIdentifyHandler = async (req, res, next) => {
   );
   deviceInfo.fingerprint = fingerprintBuilder(deviceInfo);
   const score = await calculateLoginRisk(user, deviceInfo, time);
-  let riskLevel = await resolveRiskLevel(score, user.twoFA.enabled);
-  riskLevel = riskLevel === "verylow" ? "low" : riskLevel;
+  const riskLevel = await resolveRiskLevel(score);
 
   const response = await buildVerifyDecisionResponse(riskLevel, ctxId, user);
-
-  if (riskLevel === "veryhigh" && !user.twoFA.enabled) {
-    return sendSecurityUpgrade(user, res, deviceInfo);
-  }
 
   await setSession(deviceInfo, ctxId, "verify:info");
   await setSession(
@@ -44,7 +38,6 @@ export const verifyIdentifyHandler = async (req, res, next) => {
       success: true,
       risk: riskLevel,
       allowedMethod: response.allowedMethod,
-      stepUp: response.stepUp,
       riskScore: score,
       userId: user._id,
     },

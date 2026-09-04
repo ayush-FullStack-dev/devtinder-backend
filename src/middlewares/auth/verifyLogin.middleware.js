@@ -211,7 +211,6 @@ export const verifyLoginPasskey = async (req, res, next) => {
     req.auth.verify = {
       success: false,
       method: "passkey",
-      stepup: info.risk === "high",
       message: "We couldn't verify this passkey. Please try again.",
     };
     return next();
@@ -258,13 +257,12 @@ export const verifyLoginPassword = async (req, res, next) => {
     req.auth.verify = {
       success: false,
       method: "password",
-      stepup: info.risk === "high",
       message: "Invalid credentials!",
     };
     return next();
   }
 
-  req.auth.verify = { success: true, stepup: info.risk === "high", method: "password" };
+  req.auth.verify = { success: true,  method: "password" };
   return next();
 };
 
@@ -358,7 +356,6 @@ export const verifyLoginSecurityCode = async (req, res, next) => {
 
   req.auth.verify = {
     success: true,
-    stepup: info.risk === "high" || info.risk === "veryhigh",
     method: "security_code",
   };
   return next();

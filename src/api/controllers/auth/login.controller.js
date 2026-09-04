@@ -19,7 +19,6 @@ import { setTwoFa } from "../../../helpers/twoFa.js";
 
 import {
   calculateLoginRisk,
-  sendSecurityUpgrade,
   resolveRiskLevel,
   buildLoginDecisionResponse,
 } from "../../../utils/security/loginRisk.js";
@@ -41,19 +40,20 @@ export const loginIdentifyHandler = async (req, res) => {
   const score = await calculateLoginRisk(user, deviceInfo, time);
   const riskLevel = resolveRiskLevel(score);
 
-  if (riskLevel === "veryhigh" && !user.twoFA.enabled) {
-    return sendSecurityUpgrade(user, res, deviceInfo);
-  }
-
-  const response = await buildLoginDecisionResponse(riskLevel, ctxId, user);
+  const response = await buildLoginDecisionResponse(
+    riskLevel,
+    ctxId,
+    user,
+    user.twoFA.enabled,
+  );
 
   await setSession(deviceInfo, ctxId, "login:info");
   await setSession(
     {
       success: true,
       risk: riskLevel,
-      allowedMethod: response.allowedMethod,
       stepUp: response.stepUp,
+      allowedMethod: response.allowedMethod,
       riskScore: score,
       userId: user._id,
     },
@@ -99,19 +99,7 @@ export const verifyLoginHandler = async (req, res) => {
 
   const userInfo = buildUserInfo(deviceInfo, verify, info);
 
-  if (verify?.stepup && !user.twoFA.enabled && verify.method === "password") {
-    return sendResponse(res, 403, {
-      error: "STEP_UP_REQUIRED",
-      message: "Password authentication is not sufficient for this request.",
-      action: "TRY_ANOTHER_VERIFICATION_METHOD",
-    });
-  }
-
-  if (
-    verify?.stepup &&
-    user.twoFA.enabled &&
-    !["passkey"].includes(verify?.method)
-  ) {
+  if (verify?.stepup && user.twoFA.enabled) {
     const data = await setTwoFa(ctxId, userInfo, methods);
     user.twoFA.tokenInfo.push(data.info);
 

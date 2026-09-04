@@ -24,21 +24,17 @@ export const resolveRiskLevel = (score) => {
   return getRiskLevel(score);
 };
 
-export const sendSecurityUpgrade = (user, res, deviceInfo) => {
-  sendSuspiciousAlert(user.email, deviceInfo);
-  return sendResponse(res, 403, {
-    success: false,
-    code: "SECURITY_UPGRADE_REQUIRED",
-    message:
-      "We detected unusual activity. Please secure your account to continue.",
-    risk: "veryhigh",
-    required: ["2fa"],
-    allowedNext: ["enable_2fa", "account_recovery"],
-  });
-};
-
-export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
+export const buildLoginDecisionResponse = async (
+  riskLevel,
+  ctxId,
+  user,
+  twoFAEnabled,
+) => {
   const options = await getPasskey(user);
+  const stepUp =
+    twoFAEnabled && ["mid", "high", "veryhigh"].includes(riskLevel)
+      ? "2fa"
+      : null;
 
   if (user.logout?.length && riskLevel === "verylow") {
     const lastLogout = user.logout[user.logout.length - 1];
@@ -66,6 +62,7 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
       message: "Signed in automatically",
       primaryMethod: "trusted_session",
       passkey: options,
+      stepUp,
       allowedMethod: [
         "passkey",
         "password",
@@ -80,6 +77,7 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
+      stepUp,
       allowedMethod: [
         "passkey",
         "password",
@@ -103,6 +101,7 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
         "security_code",
         "trusted_session",
       ],
+      stepUp,
       primaryMethod: "passkey",
       passkey: options,
     };
@@ -112,6 +111,7 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
     return {
       action: "REQUIRED_METHOD",
       risk: riskLevel,
+      stepUp,
       primaryMethod: "security_code",
       allowedMethod: [
         "password",
@@ -119,7 +119,6 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
         "session_approval",
         "passkey",
       ],
-      stepUp: ["2fa"],
       passkey: options,
     };
   }
@@ -127,9 +126,9 @@ export const buildLoginDecisionResponse = async (riskLevel, ctxId, user) => {
   return {
     action: "REQUIRED_METHOD",
     risk: riskLevel,
-    allowedMethod: ["security_code", "session_approval"],
+    stepUp,
+    allowedMethod: ["security_code", "session_approval","passkey"],
     primaryMethod: "security_code",
-    stepUp: ["2fa"],
   };
 };
 
@@ -190,7 +189,6 @@ export const buildVerifyDecisionResponse = async (riskLevel, ctxId, user) => {
         "session_approval",
         "passkey",
       ],
-      stepUp: ["2fa"],
       passkey: options,
     };
   }
@@ -198,8 +196,7 @@ export const buildVerifyDecisionResponse = async (riskLevel, ctxId, user) => {
   return {
     action: "REQUIRED_METHOD",
     risk: riskLevel,
-    allowedMethod: ["security_code", "session_approval"],
+    allowedMethod: ["security_code", "session_approval","passkey"],
     primaryMethod: "security_code",
-    stepUp: ["2fa"],
   };
 };

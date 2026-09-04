@@ -87,7 +87,6 @@ export const checkSessionApproval = (approval, info) => {
       success: true,
       method: "session_approval",
       code: "APPROVAL_ACCEPTED",
-      stepup: info.risk === "high" || info.risk === "veryhigh",
     };
   }
 

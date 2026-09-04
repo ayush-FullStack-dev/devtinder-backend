@@ -10,7 +10,10 @@ import {
 } from "../../../constants/auth.constant.js";
 
 import { createAuthEvent } from "../../../services/authEvent.service.js";
-import { setSession, cleanupReauth } from "../../../services/session.service.js";
+import {
+  setSession,
+  cleanupReauth,
+} from "../../../services/session.service.js";
 
 import { buildAuthInfo } from "../../../helpers/authEvent.js";
 import { collectOnMethod } from "../../../helpers/helpers.js";
@@ -20,8 +23,14 @@ import { buildDeviceInfo } from "../../../helpers/buildDeviceInfo.js";
 import { getIpDetails } from "../../../helpers/ip.js";
 import { verifyRefreshToken } from "../../../helpers/token.js";
 import { findUser } from "../../../services/user.service.js";
-import { compareFingerprint, fingerprintBuilder } from "../../../utils/fingerprint.js";
-import { getRiskScore, getRiskLevel } from "../../../utils/security/riskEngine.js";
+import {
+  compareFingerprint,
+  fingerprintBuilder,
+} from "../../../utils/fingerprint.js";
+import {
+  getRiskScore,
+  getRiskLevel,
+} from "../../../utils/security/riskEngine.js";
 import { getTime } from "../../../helpers/time.js";
 import { removeCookie } from "../../../helpers/sendResponse.js";
 
@@ -45,11 +54,16 @@ export const reauthIdentifyHandler = async (req, res) => {
   }
 
   const decoded = verifyRefreshToken(oldRefreshToken);
+
   if (!decoded?.success) {
-    return removeCookie(res, 401, { message: decoded.message, action: "logout" });
+    return removeCookie(res, 401, {
+      message: decoded.message,
+      action: "logout",
+    });
   }
 
   const user = await findUser({ _id: decoded.data._id });
+
   if (!user) {
     return removeCookie(res, 401, {
       message: "Session is no longer valid. Please sign in again.",
@@ -80,9 +94,11 @@ export const reauthIdentifyHandler = async (req, res) => {
   }
 
   const validFp = await compareFingerprint(deviceInfo, token.fingerprint);
+
   if (!validFp) {
     return sendResponse(res, 401, {
-      message: "Your device fingerprint changed. Re-authentication cannot proceed.",
+      message:
+        "Your device fingerprint changed. Re-authentication cannot proceed.",
       action: "logout",
     });
   }
@@ -96,21 +112,17 @@ export const reauthIdentifyHandler = async (req, res) => {
 
   const ctxId = crypto.randomBytes(16).toString("hex");
 
-  const methods = collectOnMethod(user.twoFA?.twoFAMethods);
-
-  const allowedMethod = ["passkey", "password"].filter((method) => {
-    if (method === "passkey") return methods?.includes("passkey");
-    if (method === "password") return true;
-    return false;
-  });
-
   await setSession(deviceInfo, ctxId, "reauth:info");
   await setSession(
     {
       success: true,
       purpose: "reauth",
-      allowedMethod,
-      methods,
+      allowedMethod: [
+        "passkey",
+        "password",
+        "session_approval",
+        "security_code",
+      ],
       risk: riskLevel,
       userId: user._id,
     },
@@ -124,8 +136,13 @@ export const reauthIdentifyHandler = async (req, res) => {
     {
       success: true,
       action: "reauth",
-      allowedMethod,
-      primaryMethod: allowedMethod[0],
+      allowedMethod: [
+        "passkey",
+        "password",
+        "session_approval",
+        "security_code",
+      ],
+      primaryMethod: "passkey",
       methods,
       risk: riskLevel,
     },
@@ -134,13 +151,15 @@ export const reauthIdentifyHandler = async (req, res) => {
   );
 };
 
-
 export const verifyReauthHandler = async (req, res) => {
   const { user, verify, deviceInfo, info, ctxId, refreshExpiry } = req.auth;
 
   const allowedMethod = info?.allowedMethod || [];
 
-  if (verify?.success === undefined && !allowedMethod.includes(verify?.method)) {
+  if (
+    verify?.success === undefined &&
+    !allowedMethod.includes(verify?.method)
+  ) {
     return sendResponse(res, 401, {
       message: "No valid verification method provided.",
       code: "METHOD_NOT_FOUND",
@@ -163,7 +182,11 @@ export const verifyReauthHandler = async (req, res) => {
 
     await cleanupReauth(ctxId);
 
-    return sendResponse(res, 401, verify?.message || "Re-authentication failed.");
+    return sendResponse(
+      res,
+      401,
+      verify?.message || "Re-authentication failed.",
+    );
   }
 
   const userInfo = buildReauthUserInfo(deviceInfo, verify, info?.risk);
@@ -211,7 +234,11 @@ export const verifyReauthHandler = async (req, res) => {
     .clearCookie("reauth_ctx", cookieOption)
     .clearCookie("approvalId", cookieOption)
     .cookie("accessToken", accessToken, accessTokenCookieOption)
-    .cookie("refreshToken", refreshToken, refreshTokenCookieOption(refreshExpiry.ms))
+    .cookie(
+      "refreshToken",
+      refreshToken,
+      refreshTokenCookieOption(refreshExpiry.ms),
+    )
     .cookie("trustedSession", trustedSession, trustedSessionCookieOption)
     .json({
       success: true,
