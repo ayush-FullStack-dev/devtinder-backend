@@ -48,6 +48,7 @@ export const verifyLoginValidation = async (req, res, next) => {
   const loginCtxId = req.signedCookies?.login_ctx;
   const reauthCtxId = req.signedCookies?.reauth_ctx;
   const ctxId = loginCtxId || reauthCtxId;
+
   const purpose = reauthCtxId && !loginCtxId ? "reauth" : "login";
   const infoKey = `${purpose}:info:${ctxId}`;
   const ctxKey = `${purpose}:ctx:${ctxId}`;

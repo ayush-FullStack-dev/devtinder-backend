@@ -45,6 +45,7 @@ export function setCtxId(response, code, message, id, cookieName = "ctxId") {
       message,
     });
   }
+  
   response
     .status(code)
     .cookie(cookieName, id, cookieOption)

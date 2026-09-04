@@ -276,7 +276,7 @@ const newLoginAlertTemplete = (
                       "
                     >
                       <img
-                        src="https://devtinder.tech/brand/logo/logo-mark-monochrome.svg"
+                        src=${process.env.DOMAIN_LINK}/brand/logo/monochrome-icon.svg}
                         alt="DevTinder"
                         width="50"
                         style="
@@ -312,7 +312,7 @@ const newLoginAlertTemplete = (
                       "
                     >
                       <img
-                        src="https://devtinder.tech/brand/logo/monochrome-wordmark.svg"
+                        src="${process.env.DOMAIN_LINK}/brand/logo/monochrome-wordmark.svg"
                         alt="DevTinder"
                         width="150"
                         style="
