@@ -1,6 +1,3 @@
-import sendResponse from "../../helpers/sendResponse.js";
-
-import { sendSuspiciousAlert } from "../../helpers/mail.js";
 import { getRiskLevel, getRiskScore } from "./riskEngine.js";
 
 import { getPasskey } from "../../helpers/passkey.js";

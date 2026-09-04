@@ -2,7 +2,7 @@ import { getNoSaltHash, compareNoSaltHash } from "../helpers/hash.js";
 import bcrypt from "bcryptjs";
 
 const buildFpString = (userInfo) =>
-  `${userInfo.browser}|${userInfo.os}|${userInfo.osVersion}|${userInfo.deviceModel}|${userInfo.deviceType}|${userInfo.deviceId}|${userInfo.userAgent}|${userInfo.deviceSize}|${userInfo.timezone}`;
+  `${userInfo.browser}|${userInfo.os}|${userInfo.osVersion}|${userInfo.deviceModel}|${userInfo.deviceType}|${userInfo.userAgent}|${userInfo.deviceSize}|${userInfo.timezone}`;
 
 export const fingerprintBuilder = (userInfo) => {
   const fp = typeof userInfo === "string" ? userInfo : buildFpString(userInfo);
