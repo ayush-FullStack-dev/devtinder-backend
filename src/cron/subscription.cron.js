@@ -7,14 +7,14 @@ import {
 export const startSubscriptionCrons = () => {
     cron.schedule("0 0 * * *", async () => {
         try {
-            console.log("🟢 Running daily subscription jobs");
+            console.log("Running daily subscription jobs");
 
             await handleSubscriptioncarriedForwardDays();
             await handleSubscriptionExpiry();
 
-            console.log("✅ Subscription cron completed");
+            console.log("Subscription cron completed");
         } catch (err) {
-            console.error("❌ Subscription cron failed", err);
+            console.error("Subscription cron failed", err);
         }
     });
 };

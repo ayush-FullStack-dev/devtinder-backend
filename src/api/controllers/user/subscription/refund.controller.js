@@ -84,7 +84,6 @@ export const refundAutopaySubscription = async (req, res) => {
 
     await subscriptionInfo.save();
   } catch (error) {
-    console.log(error);
     return sendResponse(res, 500, {
       message: "Failed to process autopay refund",
       error: error.message,
@@ -169,7 +168,6 @@ export const refundSubscription = async (req, res) => {
 
     await subscriptionInfo.save();
   } catch (error) {
-    console.log(error);
     return sendResponse(res, 500, {
       message: "Failed to process refund",
       error: error.message,

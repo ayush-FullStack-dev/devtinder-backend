@@ -20,7 +20,6 @@ export const sendNotification = async (subscription, data) => {
             notificationId
         };
     } catch (err) {
-        console.log(err);
         if (err?.statusCode === 404 || err?.statusCode === 410) {
             await deletePushSubscription({
                 _id: subscription._id
