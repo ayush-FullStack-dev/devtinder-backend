@@ -75,10 +75,16 @@ class LocalRateLimiter {
 
     const blockKey = `block:${route}:${identifier}`;
     const blockedUntil = this.store.get(blockKey);
+
     if (blockedUntil) {
       if (now < blockedUntil) {
-        return { allowed: false, blocked: true };
+        return {
+          allowed: false,
+          blocked: true,
+          retryAfter: Math.max(1, Math.ceil((blockedUntil - now) / 1000)),
+        };
       }
+
       this.store.delete(blockKey);
     }
 
@@ -91,33 +97,51 @@ class LocalRateLimiter {
         resetTime: now + windowMs,
       };
       this.store.set(rateKey, record);
-      return { allowed: true, count: 1, blocked: false };
+      return {
+        allowed: true,
+        count: 1,
+        blocked: false,
+      };
     }
 
     record.count++;
     this.store.set(rateKey, record);
 
     if (record.count > limit) {
-      this.store.set(blockKey, now + blockMs);
+      const blockedUntil = now + blockMs;
+
+      this.store.set(blockKey, blockedUntil);
       this.store.delete(rateKey);
-      return { allowed: false, count: record.count, blocked: true };
+
+      return {
+        allowed: false,
+        count: record.count,
+        blocked: true,
+        retryAfter: blockSeconds,
+      };
     }
 
-    return { allowed: true, count: record.count, blocked: false };
+    return {
+      allowed: true,
+      count: record.count,
+      blocked: false,
+    };
   }
 }
 
 const localLimiter = new LocalRateLimiter(10000);
 
 let lastRedisErrorTime = 0;
-const REDIS_ERROR_LOG_INTERVAL = 10000; // 10 seconds
+const REDIS_ERROR_LOG_INTERVAL = 10000;
 
 function logRedisError(err, route) {
   const now = Date.now();
+
   if (now - lastRedisErrorTime > REDIS_ERROR_LOG_INTERVAL) {
     console.error(
       `[Redis RateLimiter Error] Failed to execute rate limiting for route: ${route}. Error: ${err.message}. Switching to local in-memory fallback.`,
     );
+
     lastRedisErrorTime = now;
   }
 }
@@ -130,20 +154,22 @@ local window = tonumber(ARGV[2])
 local blockTime = tonumber(ARGV[3])
 
 if redis.call("EXISTS", blockKey) == 1 then
-    return -1
+    local ttl = redis.call("TTL", blockKey)
+    return {-1, ttl}
 end
 
 local count = redis.call("INCR", rateKey)
+
 if count == 1 then
     redis.call("EXPIRE", rateKey, window)
 end
 
 if count > limit then
     redis.call("SET", blockKey, "blocked", "EX", blockTime)
-    return -2
+    return {-2, blockTime}
 end
 
-return count
+return {count, 0}
 `;
 
 export const rateLimiter = (rateInfo = defaultRateInfo) => {
@@ -163,7 +189,6 @@ export const rateLimiter = (rateInfo = defaultRateInfo) => {
 
     const identifier = req?.auth?.user?.id || req.realIp;
 
-    // Classify route
     const isSecurity = securityRoutes.has(route);
 
     if (!isSecurity) {
@@ -174,9 +199,17 @@ export const rateLimiter = (rateInfo = defaultRateInfo) => {
         windowSeconds,
         blockSeconds,
       );
+
       if (!result.allowed) {
-        return sendResponse(res, 429, "Too many requests. Try again later.");
+        return sendResponse(res, 429, {
+          code: result.blocked ? "RATE_LIMIT_BLOCKED" : "RATE_LIMITED",
+          message: "Too many requests. Try again later.",
+          retryAfter: result.retryAfter,
+          blocked: result.blocked,
+          isRateLimit: true,
+        });
       }
+
       return next();
     }
 
@@ -194,16 +227,27 @@ export const rateLimiter = (rateInfo = defaultRateInfo) => {
         blockSeconds,
       );
 
-      if (result === -1) {
-        return sendResponse(res, 429, "Too many requests. Try again later.");
+      const status = Number(result[0]);
+      const retryAfter = Math.max(1, Number(result[1]));
+
+      if (status === -1) {
+        return sendResponse(res, 429, {
+          code: "RATE_LIMIT_BLOCKED",
+          message: "Too many requests. Try again later.",
+          retryAfter,
+          blocked: true,
+          isRateLimit: true,
+        });
       }
 
-      if (result === -2) {
-        return sendResponse(
-          res,
-          429,
-          `Too many requests. Blocked for ${rateInfo.block} minutes`,
-        );
+      if (status === -2) {
+        return sendResponse(res, 429, {
+          code: "RATE_LIMIT_BLOCKED",
+          message: "Too many requests. Try again later.",
+          retryAfter,
+          blocked: true,
+          isRateLimit: true,
+        });
       }
 
       return next();
@@ -222,11 +266,13 @@ export const rateLimiter = (rateInfo = defaultRateInfo) => {
       );
 
       if (!result.allowed) {
-        return sendResponse(
-          res,
-          429,
-          "Too many requests (emergency rate limiting active). Try again later.",
-        );
+        return sendResponse(res, 429, {
+          code: result.blocked ? "RATE_LIMIT_BLOCKED" : "RATE_LIMITED",
+          message: "Too many requests. Try again later.",
+          retryAfter: result.retryAfter,
+          blocked: result.blocked,
+          isRateLimit: true,
+        });
       }
 
       return next();

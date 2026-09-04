@@ -65,7 +65,7 @@ export const AUTH_LIMITS = {
 
 
   refresh: {
-    maxRequests: 30,
+    maxRequests: 40,
     windowMinutes: WINDOW.AUTH,
     blockMinutes: BLOCK.SHORT,
   },
