@@ -30,6 +30,8 @@ const securityRoutes = new Set([
   "mfa:start",
   "mfa:verify",
   "approve_login",
+  "reauth:identify",
+  "reauth:confirm",
 ]);
 
 class BoundedMap {

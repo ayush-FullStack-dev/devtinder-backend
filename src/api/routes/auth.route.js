@@ -76,6 +76,14 @@ import {
   activeRiskHandler,
   accountInfo,
 } from "../controllers/auth/account.controller.js";
+import {
+  reauthIdentifyHandler,
+  verifyReauthHandler,
+} from "../controllers/auth/reauth.controller.js";
+import {
+  isValidReauthSession,
+  findReauthData,
+} from "../../middlewares/auth/reauth.middleware.js";
 
 // importing middleware
 import { signupValidation } from "../../middlewares/auth/signup.middleware.js";
@@ -101,7 +109,7 @@ import {
   validateRefreshToken,
   bindTokenToDevice,
   reEvaluateRisk,
-  handleStepUpIfNeeded,
+  handleRefreshReauth,
   rotateRefreshToken,
 } from "../../middlewares/auth/refresh.middleware.js";
 import {
@@ -168,14 +176,24 @@ router.use(
 // Create new user
 router.post(
   "/signup/",
-  rateLimiter({ limit: AUTH_LIMITS["signup"].maxRequests, window: AUTH_LIMITS["signup"].windowMinutes, block: AUTH_LIMITS["signup"].blockMinutes, route: "signup" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["signup"].maxRequests,
+    window: AUTH_LIMITS["signup"].windowMinutes,
+    block: AUTH_LIMITS["signup"].blockMinutes,
+    route: "signup",
+  }),
   signupValidation,
   signupHandler,
 );
 
 router.get(
   "/verify/",
-  rateLimiter({ limit: AUTH_LIMITS["verify"].maxRequests, window: AUTH_LIMITS["verify"].windowMinutes, block: AUTH_LIMITS["verify"].blockMinutes, route: "verify" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["verify"].maxRequests,
+    window: AUTH_LIMITS["verify"].windowMinutes,
+    block: AUTH_LIMITS["verify"].blockMinutes,
+    route: "verify",
+  }),
   verifyEvl,
 );
 
@@ -194,7 +212,12 @@ router.post(
 router.post(
   "/login/identify/",
   validateBasicInfo,
-  rateLimiter({ limit: AUTH_LIMITS["login:identify"].maxRequests, window: AUTH_LIMITS["login:identify"].windowMinutes, block: AUTH_LIMITS["login:identify"].blockMinutes, route: "login:identify" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["login:identify"].maxRequests,
+    window: AUTH_LIMITS["login:identify"].windowMinutes,
+    block: AUTH_LIMITS["login:identify"].blockMinutes,
+    route: "login:identify",
+  }),
   loginIdentifyValidation,
   loginIdentifyHandler,
 );
@@ -202,7 +225,12 @@ router.post(
 router.post(
   "/login/confirm/",
   validateBasicInfo,
-  rateLimiter({ limit: AUTH_LIMITS["login:confirm"].maxRequests, window: AUTH_LIMITS["login:confirm"].windowMinutes, block: AUTH_LIMITS["login:confirm"].blockMinutes, route: "login:confirm" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["login:confirm"].maxRequests,
+    window: AUTH_LIMITS["login:confirm"].windowMinutes,
+    block: AUTH_LIMITS["login:confirm"].blockMinutes,
+    route: "login:confirm",
+  }),
   verifyLoginValidation, // context + risk
   verifyLoginTrustDevice, // trusted session
   verifyLoginPasskey, // verylow / low / mid / high auto-login or verify
@@ -216,21 +244,36 @@ router.post(
 // verify-2fa
 router.post(
   "/verify-2fa/start/",
-  rateLimiter({ limit: AUTH_LIMITS["2fa:start"].maxRequests, window: AUTH_LIMITS["2fa:start"].windowMinutes, block: AUTH_LIMITS["2fa:start"].blockMinutes, route: "2fa:start" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["2fa:start"].maxRequests,
+    window: AUTH_LIMITS["2fa:start"].windowMinutes,
+    block: AUTH_LIMITS["2fa:start"].blockMinutes,
+    route: "2fa:start",
+  }),
   twoFAValidation,
   startTwoFAHandler,
 );
 
 router.post(
   "/verify-2fa/resend/",
-  rateLimiter({ limit: AUTH_LIMITS["2fa:resend"].maxRequests, window: AUTH_LIMITS["2fa:resend"].windowMinutes, block: AUTH_LIMITS["2fa:resend"].blockMinutes, route: "2fa:resend" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["2fa:resend"].maxRequests,
+    window: AUTH_LIMITS["2fa:resend"].windowMinutes,
+    block: AUTH_LIMITS["2fa:resend"].blockMinutes,
+    route: "2fa:resend",
+  }),
   twoFAValidation,
   resendOtpHandler,
 );
 
 router.post(
   "/verify-2fa/confirm/",
-  rateLimiter({ limit: AUTH_LIMITS["2fa:confirm"].maxRequests, window: AUTH_LIMITS["2fa:confirm"].windowMinutes, block: AUTH_LIMITS["2fa:confirm"].blockMinutes, route: "2fa:confirm" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["2fa:confirm"].maxRequests,
+    window: AUTH_LIMITS["2fa:confirm"].windowMinutes,
+    block: AUTH_LIMITS["2fa:confirm"].blockMinutes,
+    route: "2fa:confirm",
+  }),
   verifyTwoFAValidation,
   verifyTwoFAEmail,
   verifyTwoFATotp,
@@ -243,22 +286,31 @@ router.post(
   "/refresh/",
   validateBasicInfo,
   extractRefreshToken,
-  rateLimiter({ limit: AUTH_LIMITS["refresh"].maxRequests, window: AUTH_LIMITS["refresh"].windowMinutes, block: AUTH_LIMITS["refresh"].blockMinutes, route: "refresh" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["refresh"].maxRequests,
+    window: AUTH_LIMITS["refresh"].windowMinutes,
+    block: AUTH_LIMITS["refresh"].blockMinutes,
+    route: "refresh",
+  }),
   validateRefreshToken,
   bindTokenToDevice,
   reEvaluateRisk,
-  handleStepUpIfNeeded,
+  handleRefreshReauth,
   rotateRefreshToken,
   issueNewTokens,
 );
-
 // logout exsiting sessions
 router.post(
   "/logout/",
   validateBasicInfo,
   isLogin,
   findLoginData,
-  rateLimiter({ limit: AUTH_LIMITS["logout"].maxRequests, window: AUTH_LIMITS["logout"].windowMinutes, block: AUTH_LIMITS["logout"].blockMinutes, route: "logout" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["logout"].maxRequests,
+    window: AUTH_LIMITS["logout"].windowMinutes,
+    block: AUTH_LIMITS["logout"].blockMinutes,
+    route: "logout",
+  }),
   extractLogoutInfo,
   validateLogout,
   logoutCurrentSession,
@@ -270,7 +322,12 @@ router.post(
   validateBasicInfo,
   isLogin,
   findLoginData,
-  rateLimiter({ limit: AUTH_LIMITS["logout:all"].maxRequests, window: AUTH_LIMITS["logout:all"].windowMinutes, block: AUTH_LIMITS["logout:all"].blockMinutes, route: "logout:all" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["logout:all"].maxRequests,
+    window: AUTH_LIMITS["logout:all"].windowMinutes,
+    block: AUTH_LIMITS["logout:all"].blockMinutes,
+    route: "logout:all",
+  }),
   extractLogoutInfo,
   validateLogout,
   logoutAllSession,
@@ -282,14 +339,24 @@ router.get(
   "/session/",
   isLogin,
   findLoginData,
-  rateLimiter({ limit: AUTH_LIMITS["session:list"].maxRequests, window: AUTH_LIMITS["session:list"].windowMinutes, block: AUTH_LIMITS["session:list"].blockMinutes, route: "session:list" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["session:list"].maxRequests,
+    window: AUTH_LIMITS["session:list"].windowMinutes,
+    block: AUTH_LIMITS["session:list"].blockMinutes,
+    route: "session:list",
+  }),
   sessionHandler,
 );
 
 router.get(
   "/me",
   isLogin,
-  rateLimiter({ limit: AUTH_LIMITS["account:me"].maxRequests, window: AUTH_LIMITS["account:me"].windowMinutes, block: AUTH_LIMITS["account:me"].blockMinutes, route: "account:me" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["account:me"].maxRequests,
+    window: AUTH_LIMITS["account:me"].windowMinutes,
+    block: AUTH_LIMITS["account:me"].blockMinutes,
+    route: "account:me",
+  }),
   accountInfo,
 );
 
@@ -297,7 +364,12 @@ router.post(
   "/session/revoke/:id/",
   isLogin,
   findLoginData,
-  rateLimiter({ limit: AUTH_LIMITS["session:revoke"].maxRequests, window: AUTH_LIMITS["session:revoke"].windowMinutes, block: AUTH_LIMITS["session:revoke"].blockMinutes, route: "session:revoke" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["session:revoke"].maxRequests,
+    window: AUTH_LIMITS["session:revoke"].windowMinutes,
+    block: AUTH_LIMITS["session:revoke"].blockMinutes,
+    route: "session:revoke",
+  }),
   sessionRevokeHandler,
 );
 
@@ -307,7 +379,12 @@ router.post(
   validateBasicInfo,
   isLogin,
   findLoginData,
-  rateLimiter({ limit: AUTH_LIMITS["password:start"].maxRequests, window: AUTH_LIMITS["password:start"].windowMinutes, block: AUTH_LIMITS["password:start"].blockMinutes, route: "password:start" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["password:start"].maxRequests,
+    window: AUTH_LIMITS["password:start"].windowMinutes,
+    block: AUTH_LIMITS["password:start"].blockMinutes,
+    route: "password:start",
+  }),
   verifyIdentifyHandler,
 );
 
@@ -316,7 +393,12 @@ router.post(
   validateBasicInfo,
   isLogin,
   findLoginData,
-  rateLimiter({ limit: AUTH_LIMITS["password:confirm"].maxRequests, window: AUTH_LIMITS["password:confirm"].windowMinutes, block: AUTH_LIMITS["password:confirm"].blockMinutes, route: "password:confirm" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["password:confirm"].maxRequests,
+    window: AUTH_LIMITS["password:confirm"].windowMinutes,
+    block: AUTH_LIMITS["password:confirm"].blockMinutes,
+    route: "password:confirm",
+  }),
   verifyVerifaction,
   changePasswordHandler, // chnage password
   verifyLoginPasskey, // verylow / low / mid / high auto-login or verify
@@ -329,7 +411,12 @@ router.post(
 
 router.post(
   "/forgot-password/",
-  rateLimiter({ limit: AUTH_LIMITS["password:forgot"].maxRequests, window: AUTH_LIMITS["password:forgot"].windowMinutes, block: AUTH_LIMITS["password:forgot"].blockMinutes, route: "password:forgot" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["password:forgot"].maxRequests,
+    window: AUTH_LIMITS["password:forgot"].windowMinutes,
+    block: AUTH_LIMITS["password:forgot"].blockMinutes,
+    route: "password:forgot",
+  }),
   forgotPasswordHandler,
 );
 
@@ -359,7 +446,12 @@ router.post(
   "/mfa/start/",
   isLogin,
   findLoginData,
-  rateLimiter({ limit: AUTH_LIMITS["mfa:start"].maxRequests, window: AUTH_LIMITS["mfa:start"].windowMinutes, block: AUTH_LIMITS["mfa:start"].blockMinutes, route: "mfa:start" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["mfa:start"].maxRequests,
+    window: AUTH_LIMITS["mfa:start"].windowMinutes,
+    block: AUTH_LIMITS["mfa:start"].blockMinutes,
+    route: "mfa:start",
+  }),
   verifyIdentifyHandler,
 );
 
@@ -367,7 +459,12 @@ router.post(
   "/mfa/verify/",
   isLogin,
   findLoginData,
-  rateLimiter({ limit: AUTH_LIMITS["mfa:verify"].maxRequests, window: AUTH_LIMITS["mfa:verify"].windowMinutes, block: AUTH_LIMITS["mfa:verify"].blockMinutes, route: "mfa:verify" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["mfa:verify"].maxRequests,
+    window: AUTH_LIMITS["mfa:verify"].windowMinutes,
+    block: AUTH_LIMITS["mfa:verify"].blockMinutes,
+    route: "mfa:verify",
+  }),
   verifyVerifaction,
   verifyLoginPasskey,
   verifyLoginPassword,
@@ -434,17 +531,59 @@ router
 //availability check
 router.get(
   "/check-username/",
-  rateLimiter({ limit: AUTH_LIMITS["check:username"].maxRequests, window: AUTH_LIMITS["check:username"].windowMinutes, block: AUTH_LIMITS["check:username"].blockMinutes, route: "check:username" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["check:username"].maxRequests,
+    window: AUTH_LIMITS["check:username"].windowMinutes,
+    block: AUTH_LIMITS["check:username"].blockMinutes,
+    route: "check:username",
+  }),
   checkUsername,
 );
 
 router.get(
   "/check-email/",
-  rateLimiter({ limit: AUTH_LIMITS["check:email"].maxRequests, window: AUTH_LIMITS["check:email"].windowMinutes, block: AUTH_LIMITS["check:email"].blockMinutes, route: "check:email" }),
+  rateLimiter({
+    limit: AUTH_LIMITS["check:email"].maxRequests,
+    window: AUTH_LIMITS["check:email"].windowMinutes,
+    block: AUTH_LIMITS["check:email"].blockMinutes,
+    route: "check:email",
+  }),
   checkEmail,
 );
 
 router.get("/account/security-events/", securityEventHandler);
 router.get("/account/active-risks/", activeRiskHandler);
+
+router.post(
+  "/reauth/identify/",
+  validateBasicInfo,
+  rateLimiter({
+    limit: AUTH_LIMITS["reauth:identify"].maxRequests,
+    window: AUTH_LIMITS["reauth:identify"].windowMinutes,
+    block: AUTH_LIMITS["reauth:identify"].blockMinutes,
+    route: "reauth:identify",
+  }),
+  reauthIdentifyHandler,
+);
+
+router.post(
+  "/reauth/confirm/",
+  validateBasicInfo,
+  rateLimiter({
+    limit: AUTH_LIMITS["reauth:confirm"].maxRequests,
+    window: AUTH_LIMITS["reauth:confirm"].windowMinutes,
+    block: AUTH_LIMITS["reauth:confirm"].blockMinutes,
+    route: "reauth:confirm",
+  }),
+  isValidReauthSession,
+  findReauthData,
+  verifyLoginValidation,
+  verifyLoginPasskey,
+  verifyLoginPassword,
+  verifyLoginSessionApproval,
+  verifyLoginSecurityCode,
+  verifyLoginFallback,
+  verifyReauthHandler,
+);
 
 export default router;

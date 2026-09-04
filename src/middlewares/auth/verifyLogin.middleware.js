@@ -5,6 +5,7 @@ import {
   getSession,
   setSession,
   cleanupLogin,
+  cleanupReauth,
   runRedisLua,
 } from "../../services/session.service.js";
 import {
@@ -30,24 +31,26 @@ import {
 import { verifyKey } from "../../helpers/passkey.js";
 
 import { verifyHash } from "../../helpers/hash.js";
-import { success } from "../../../logs/printLogs.js";
 
-const trackMethodFailure = async (ctxId, method) => {
-  const key = `login:attempts:${ctxId}:${method}`;
+const cleanupByPurpose = (purpose, ctxId) =>
+  purpose === "reauth" ? cleanupReauth(ctxId) : cleanupLogin(ctxId);
+
+const trackMethodFailure = async (ctxId, method, purpose = "login") => {
+  const key = `${purpose}:attempts:${ctxId}:${method}`;
   const current = await getSession(key);
   const attempts = (current || 0) + 1;
-  await setSession(attempts, ctxId, `login:attempts:${method}`, "EX", 600);
+  await setSession(attempts, ctxId, `${purpose}:attempts:${method}`, "EX", 600);
   return attempts;
 };
 
-const checkMethodLimitExceeded = async (ctxId, method) => {
-  const key = `login:attempts:${ctxId}:${method}`;
-  const attempts = await getSession(key);
-  return attempts > (methodFailedAttemptLimits[method] || 999);
-};
 
 export const verifyLoginValidation = async (req, res, next) => {
-  const ctxId = req.signedCookies?.login_ctx;
+  const loginCtxId = req.signedCookies?.login_ctx;
+  const reauthCtxId = req.signedCookies?.reauth_ctx;
+  const ctxId = loginCtxId || reauthCtxId;
+  const purpose = reauthCtxId && !loginCtxId ? "reauth" : "login";
+  const infoKey = `${purpose}:info:${ctxId}`;
+  const ctxKey = `${purpose}:ctx:${ctxId}`;
 
   const validate = checkValidation(
     verifyLoginValidator,
@@ -65,25 +68,22 @@ export const verifyLoginValidation = async (req, res, next) => {
     await getIpDetails(req.realIp),
   );
 
-  const savedDeviceInfo = await getSession(`login:info:${ctxId}`);
-
-  const savedInfo = await getSession(`login:ctx:${ctxId}`);
+  const savedDeviceInfo = await getSession(infoKey);
+  const savedInfo = await getSession(ctxKey);
 
   if (!savedInfo?.success) {
     return sendResponse(res, 401, {
       message: "Your login session has expired. Please start again.",
-      action: "RESTART_LOGIN",
+      action: purpose === "reauth" ? "RESTART_REAUTH" : "RESTART_LOGIN",
     });
   }
 
-  const user = await findUser({
-    _id: savedInfo.userId,
-  });
+  const user = await findUser({ _id: savedInfo.userId });
 
   if (!user) {
     return sendResponse(res, 401, {
-      message: "We couldn’t sign you in. Please start again.",
-      action: "RESTART_LOGIN",
+      message: "We couldn't sign you in. Please start again.",
+      action: purpose === "reauth" ? "RESTART_REAUTH" : "RESTART_LOGIN",
     });
   }
 
@@ -95,7 +95,7 @@ export const verifyLoginValidation = async (req, res, next) => {
     getDeviceInfo.timezone !== savedDeviceInfo.timezone;
 
   if (contextChanged) {
-    await cleanupLogin(ctxId);
+    await cleanupByPurpose(purpose, ctxId);
     return sendResponse(
       res,
       401,
@@ -104,28 +104,20 @@ export const verifyLoginValidation = async (req, res, next) => {
   }
 
   if (savedInfo.risk !== validate.value.risk) {
-    await cleanupLogin(ctxId);
-    return sendResponse(
-      res,
-      401,
-      "This request is prevent Risk-hopping attack!",
-    );
+    await cleanupByPurpose(purpose, ctxId);
+    return sendResponse(res, 401, "This request is prevent Risk-hopping attack!");
   }
 
   if (!savedInfo.allowedMethod?.includes(validate.value.method)) {
-    await cleanupLogin(ctxId);
-    return sendResponse(
-      res,
-      401,
-      "This request is prevent Method-hopping attack!",
-    );
+    await cleanupByPurpose(purpose, ctxId);
+    return sendResponse(res, 401, "This request is prevent Method-hopping attack!");
   }
 
   req.auth = {
     refreshExpiry: setRefreshExpiry(validate.value),
-    user: user,
+    user,
     values: validate.value,
-    info: savedInfo,
+    info: { ...savedInfo, purpose },
     ctxId,
     deviceInfo: getDeviceInfo,
   };
@@ -134,22 +126,22 @@ export const verifyLoginValidation = async (req, res, next) => {
 };
 
 export const verifyLoginTrustDevice = async (req, res, next) => {
-  const { deviceInfo, ctxId, values } = req.auth;
+  const { deviceInfo, ctxId, values, info } = req.auth;
+  const purpose = info?.purpose || "login";
 
   if (values?.method !== "trusted_session") return next();
 
   const isTrusted = verifyToken(req.signedCookies.trustedSession);
 
   if (!isTrusted?.success || isTrusted?.data.did !== deviceInfo.deviceId) {
-    const attempts = await trackMethodFailure(ctxId, "trusted_session");
+    const attempts = await trackMethodFailure(ctxId, "trusted_session", purpose);
     const limitExceeded = attempts > methodFailedAttemptLimits.trusted_session;
 
     if (limitExceeded) {
-      await cleanupLogin(ctxId);
+      await cleanupByPurpose(purpose, ctxId);
       return sendResponse(res, 401, {
-        message:
-          "Too many failed trusted session attempts. Please start again.",
-        action: "RESTART_LOGIN",
+        message: "Too many failed trusted session attempts. Please start again.",
+        action: purpose === "reauth" ? "RESTART_REAUTH" : "RESTART_LOGIN",
       });
     }
 
@@ -161,24 +153,16 @@ export const verifyLoginTrustDevice = async (req, res, next) => {
     return next();
   }
 
-  req.auth.verify = {
-    success: true,
-    method: "trusted_session",
-  };
-
+  req.auth.verify = { success: true, method: "trusted_session" };
   return next();
 };
 
 export const verifyLoginPasskey = async (req, res, next) => {
   const { user, info, ctxId, values, verify } = req.auth;
+  const purpose = info?.purpose || "login";
 
-  if (verify?.success !== undefined) {
-    return next();
-  }
-
-  if (values.method !== "passkey") {
-    return next();
-  }
+  if (verify?.success !== undefined) return next();
+  if (values.method !== "passkey") return next();
 
   const saved = await getSession(`passkey:login:${ctxId}`);
 
@@ -213,14 +197,14 @@ export const verifyLoginPasskey = async (req, res, next) => {
   );
 
   if (!verification?.verified) {
-    const attempts = await trackMethodFailure(ctxId, "passkey");
+    const attempts = await trackMethodFailure(ctxId, "passkey", purpose);
     const limitExceeded = attempts > methodFailedAttemptLimits.passkey;
 
     if (limitExceeded) {
-      await cleanupLogin(ctxId);
+      await cleanupByPurpose(purpose, ctxId);
       return sendResponse(res, 401, {
         message: "Too many failed passkey attempts. Please start again.",
-        action: "RESTART_LOGIN",
+        action: purpose === "reauth" ? "RESTART_REAUTH" : "RESTART_LOGIN",
       });
     }
 
@@ -230,7 +214,6 @@ export const verifyLoginPasskey = async (req, res, next) => {
       stepup: info.risk === "high",
       message: "We couldn't verify this passkey. Please try again.",
     };
-
     return next();
   }
 
@@ -239,50 +222,36 @@ export const verifyLoginPasskey = async (req, res, next) => {
   user.loginMethods.passkeys.keys[passkeyIndex].lastUsedAt = new Date();
 
   await updateUser(
-    {
-      _id: user._id,
-    },
-    {
-      "loginMethods.passkeys": user.loginMethods.passkeys,
-    },
+    { _id: user._id },
+    { "loginMethods.passkeys": user.loginMethods.passkeys },
   );
 
-  req.auth.verify = {
-    success: true,
-    method: "passkey",
-  };
-
+  req.auth.verify = { success: true, method: "passkey" };
   return next();
 };
 
 export const verifyLoginPassword = async (req, res, next) => {
   const { user, info, values, verify, ctxId } = req.auth;
+  const purpose = info?.purpose || "login";
 
-  if (verify?.success !== undefined) {
-    return next();
-  }
-
-  if (values.method !== "password") {
-    return next();
-  }
+  if (verify?.success !== undefined) return next();
+  if (values.method !== "password") return next();
 
   if (!values.code) {
-    return sendResponse(res, 400, {
-      message: "Password is required to verify",
-    });
+    return sendResponse(res, 400, { message: "Password is required to verify" });
   }
 
   const isValidPass = await verifyHash(values.code, user.password);
 
   if (!isValidPass) {
-    const attempts = await trackMethodFailure(ctxId, "password");
+    const attempts = await trackMethodFailure(ctxId, "password", purpose);
     const limitExceeded = attempts > methodFailedAttemptLimits.password;
 
     if (limitExceeded) {
-      await cleanupLogin(ctxId);
+      await cleanupByPurpose(purpose, ctxId);
       return sendResponse(res, 401, {
         message: "Too many failed password attempts. Please start again.",
-        action: "RESTART_LOGIN",
+        action: purpose === "reauth" ? "RESTART_REAUTH" : "RESTART_LOGIN",
       });
     }
 
@@ -295,25 +264,16 @@ export const verifyLoginPassword = async (req, res, next) => {
     return next();
   }
 
-  req.auth.verify = {
-    success: true,
-    stepup: info.risk === "high",
-    method: "password",
-  };
-
+  req.auth.verify = { success: true, stepup: info.risk === "high", method: "password" };
   return next();
 };
 
 export const verifyLoginSessionApproval = async (req, res, next) => {
   const { user, info, values, verify, deviceInfo, ctxId } = req.auth;
+  const purpose = info?.purpose || "login";
 
-  if (verify?.success !== undefined) {
-    return next();
-  }
-
-  if (values.method !== "session_approval") {
-    return next();
-  }
+  if (verify?.success !== undefined) return next();
+  if (values.method !== "session_approval") return next();
 
   const approval = await getSession(
     `session:approval:${req.signedCookies?.approvalId}`,
@@ -321,7 +281,6 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
 
   if (!approval) {
     const response = await sendSessionApproval(deviceInfo, user);
-
     return res
       .status(200)
       .cookie("approvalId", response.approvalId, {
@@ -347,14 +306,14 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
   req.auth.verify = checkSessionApproval(approval, info);
 
   if (!req.auth.verify?.success) {
-    const attempts = await trackMethodFailure(ctxId, "session_approval");
+    const attempts = await trackMethodFailure(ctxId, "session_approval", purpose);
     const limitExceeded = attempts > methodFailedAttemptLimits.session_approval;
 
     if (limitExceeded) {
-      await cleanupLogin(ctxId);
+      await cleanupByPurpose(purpose, ctxId);
       return sendResponse(res, 401, {
         message: "Session approval rejected. Please start again.",
-        action: "RESTART_LOGIN",
+        action: purpose === "reauth" ? "RESTART_REAUTH" : "RESTART_LOGIN",
       });
     }
   }
@@ -363,41 +322,29 @@ export const verifyLoginSessionApproval = async (req, res, next) => {
 };
 
 export const verifyLoginSecurityCode = async (req, res, next) => {
-  const { user, info, ctxId, values, verify } = req.auth;
+  const {  info, ctxId, values, verify } = req.auth;
+  const purpose = info?.purpose || "login";
 
-  if (verify?.success !== undefined) {
-    return next();
-  }
-
-  if (values?.method !== "security_code") {
-    return next();
-  }
+  if (verify?.success !== undefined) return next();
+  if (values?.method !== "security_code") return next();
 
   if (!values?.code) {
-    return sendResponse(res, 400, {
-      message: "security code is required to verify",
-    });
+    return sendResponse(res, 400, { message: "security code is required to verify" });
   }
 
-  const hashedCode = crypto
-    .createHash("sha256")
-    .update(values.code)
-    .digest("hex");
+  const hashedCode = crypto.createHash("sha256").update(values.code).digest("hex");
 
-  const saved = await runRedisLua(
-    securitycodeLua,
-    `securitycode:login:${hashedCode}`,
-  );
+  const saved = await runRedisLua(securitycodeLua, `securitycode:login:${hashedCode}`);
 
   if (!saved?.verified) {
-    const attempts = await trackMethodFailure(ctxId, "security_code");
+    const attempts = await trackMethodFailure(ctxId, "security_code", purpose);
     const limitExceeded = attempts > methodFailedAttemptLimits.security_code;
 
     if (limitExceeded) {
-      await cleanupLogin(ctxId);
+      await cleanupByPurpose(purpose, ctxId);
       return sendResponse(res, 401, {
         message: "Too many failed security code attempts. Please start again.",
-        action: "RESTART_LOGIN",
+        action: purpose === "reauth" ? "RESTART_REAUTH" : "RESTART_LOGIN",
       });
     }
 
@@ -414,22 +361,18 @@ export const verifyLoginSecurityCode = async (req, res, next) => {
     stepup: info.risk === "high" || info.risk === "veryhigh",
     method: "security_code",
   };
-
   return next();
 };
 
 export const verifyLoginFallback = async (req, res, next) => {
   const { values, verify } = req.auth;
 
-  if (verify?.success !== undefined) {
-    return next();
-  }
+  if (verify?.success !== undefined) return next();
 
   req.auth.verify = {
     success: false,
     method: values?.method || null,
     message: "Verification failed. Please use a valid authentication method.",
   };
-
   return next();
 };

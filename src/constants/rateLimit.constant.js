@@ -141,6 +141,17 @@ export const AUTH_LIMITS = {
     blockMinutes: BLOCK.LONG,
   },
 
+  "reauth:identify": {
+    maxRequests: 10,
+    windowMinutes: WINDOW.AUTH,
+    blockMinutes: BLOCK.MEDIUM,
+  },
+  "reauth:confirm": {
+    maxRequests: 10,
+    windowMinutes: WINDOW.AUTH,
+    blockMinutes: BLOCK.LONG,
+  },
+
 
   approve_login: {
     maxRequests: 10,

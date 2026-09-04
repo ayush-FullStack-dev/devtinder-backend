@@ -14,14 +14,17 @@ import {
 export const issueNewTokens = async (req, res, next) => {
   const { user, verify, token, refreshToken, accessToken, refreshMaxAge } =
     req.auth;
+
   req.auth.device = token;
   req.auth.reason = "security_risk";
+
   req.auth.tokenIndex = user.refreshToken.findIndex(
     (t) => t?.token === token?.token,
   );
 
   if (verify?.action === "logout-all") {
     await logoutAllSession(req);
+
     return res
       .clearCookie("accessToken", cookieOption)
       .clearCookie("refreshToken", cookieOption)
@@ -37,6 +40,7 @@ export const issueNewTokens = async (req, res, next) => {
 
   if (verify?.action === "logout") {
     const info = await logoutCurrentSession(req);
+
     return res
       .clearCookie("accessToken", cookieOption)
       .clearCookie("refreshToken", cookieOption)
@@ -48,6 +52,19 @@ export const issueNewTokens = async (req, res, next) => {
         action: "logout",
         message: verify?.message,
         ...info,
+      });
+  }
+
+  if (verify?.action === "reauth") {
+    return res
+      .clearCookie("accessToken", cookieOption)
+      .clearCookie("refreshToken", cookieOption)
+      .status(401)
+      .json({
+        success: false,
+        action: "reauth",
+        message:
+          verify?.message || "Please sign in again to verify your identity.",
       });
   }
 

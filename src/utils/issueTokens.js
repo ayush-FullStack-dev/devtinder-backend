@@ -8,12 +8,7 @@ import { fingerprintBuilder } from "./fingerprint.js";
 import { tokenBuilder } from "./cron.js";
 import { getTrustedScore } from "./security/riskEngine.js";
 
-/**
- * Issues access/refresh/trusted tokens, updates DB, logs auth event.
- * @param {{ user, deviceInfo, verify, info, refreshExpiry, userInfo }} opts
- * @returns {{ accessToken, refreshToken, trustedSession, updatedUser }}
- */
-export const issueTokens = async ({ user, deviceInfo, verify, info, refreshExpiry, userInfo }) => {
+export const issueTokens = async ({ user, deviceInfo, verify, info, refreshExpiry, userInfo, skipLoginEvent = false }) => {
   const accessToken = getAccessToken(user);
 
   const trustedSession = signToken({
@@ -66,17 +61,19 @@ export const issueTokens = async ({ user, deviceInfo, verify, info, refreshExpir
     { id: true },
   );
 
-  await createAuthEvent(
-    await buildAuthInfo(deviceInfo, verify, {
-      _id: user._id,
-      eventType: "login",
-      mfaUsed: verify?.mfaUsed || "none",
-      loginMethod: verify?.loginMethod,
-      success: true,
-      trusted: trustInfo.score >= 70,
-      risk: info.risk,
-    }),
-  );
+  if (!skipLoginEvent) {
+    await createAuthEvent(
+      await buildAuthInfo(deviceInfo, verify, {
+        _id: user._id,
+        eventType: "login",
+        mfaUsed: verify?.mfaUsed || "none",
+        loginMethod: verify?.loginMethod,
+        success: true,
+        trusted: trustInfo.score >= 70,
+        risk: info.risk,
+      }),
+    );
+  }
 
   return { accessToken, refreshToken, trustedSession, updatedUser };
 };

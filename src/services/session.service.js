@@ -48,6 +48,12 @@ export const cleanupLogin = async user => {
     return true;
 };
 
+export const cleanupReauth = async ctxId => {
+    await redis.del(`reauth:info:${ctxId}`);
+    await redis.del(`reauth:ctx:${ctxId}`);
+    return true;
+};
+
 export const getSession = async (link, option) => {
     let data = await redis.get(link);
     if (typeof option === "object" || option === undefined) {

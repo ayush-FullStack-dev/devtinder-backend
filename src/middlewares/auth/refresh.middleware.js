@@ -1,21 +1,15 @@
 import sendResponse, { removeCookie } from "../../helpers/sendResponse.js";
 import { buildDeviceInfo } from "../../helpers/buildDeviceInfo.js";
 import { verifyRefreshToken } from "../../helpers/token.js";
-import { collectOnMethod, setRefreshExpiry } from "../../helpers/helpers.js";
+import { setRefreshExpiry } from "../../helpers/helpers.js";
 import { getTime } from "../../helpers/time.js";
 import { getIpDetails } from "../../helpers/ip.js";
-import { setTwoFa } from "../../helpers/twoFa.js";
 import { getAccessToken, getRefreshToken } from "../../helpers/token.js";
 
-import { findUser, updateUser } from "../../services/user.service.js";
-import { getSession } from "../../services/session.service.js";
+import { findUser } from "../../services/user.service.js";
 
 import { tokenBuilder } from "../../utils/cron.js";
 import { getRiskScore, getRiskLevel } from "../../utils/security/riskEngine.js";
-import {
-  sendSessionApproval,
-  checkSessionApproval,
-} from "../../utils/security/sessionApproveal.js";
 import {
   compareFingerprint,
   fingerprintBuilder,
@@ -70,6 +64,7 @@ export const validateRefreshToken = async (req, res, next) => {
 
   req.auth.user = user;
   req.auth.token = findedToken;
+
   return next();
 };
 
@@ -85,9 +80,15 @@ export const bindTokenToDevice = async (req, res, next) => {
   );
 
   deviceInfo.loginContext = token.loginContext;
-  deviceInfo.loginContext.mfa = { required: false, complete: true, methodsUsed: "none" };
+
+  deviceInfo.loginContext.mfa = {
+    required: false,
+    complete: true,
+    methodsUsed: "none",
+  };
 
   const validFp = await compareFingerprint(deviceInfo, token.fingerprint);
+
   deviceInfo.fingerprint = fingerprintBuilder(deviceInfo);
 
   if (token.deviceId !== req.body.deviceId) {
@@ -97,16 +98,16 @@ export const bindTokenToDevice = async (req, res, next) => {
       message:
         "A different device was detected. All sessions have been signed out for your security.",
     };
+
     return next();
   }
 
   if (!validFp) {
     req.auth.verify = {
       success: false,
-      action: "stepup",
-      stepup: "2fa",
+      action: "reauth",
       message:
-        "Your device fingerprint changed. Please verify your identity to continue.",
+        "Your device fingerprint changed. Please sign in again to verify your identity.",
     };
 
     return next();
@@ -117,6 +118,7 @@ export const bindTokenToDevice = async (req, res, next) => {
   req.auth.tokenIndex = user.refreshToken.findIndex(
     (t) => t?.token === token?.token,
   );
+
   return next();
 };
 
@@ -126,15 +128,18 @@ export const reEvaluateRisk = async (req, res, next) => {
   if (verify?.success !== undefined) return next();
 
   const time = getTime(req);
+
   const score = await getRiskScore(deviceInfo, token, {
     time,
     validFp: req.auth.validFp,
   });
+
   const riskLevel = getRiskLevel(score);
 
   req.auth.riskLevel = riskLevel;
 
   const isTrusted = riskLevel === "verylow" || riskLevel === "low";
+
   deviceInfo.loginContext.trust = {
     deviceTrusted: isTrusted,
     sessionLevel: riskLevel,
@@ -147,88 +152,33 @@ export const reEvaluateRisk = async (req, res, next) => {
       message:
         "Unusual activity was detected on your account. You have been signed out for your security.",
     };
+
     return next();
   }
 
-  if (riskLevel === "high") {
+  if (riskLevel === "mid" || riskLevel === "high") {
     req.auth.verify = {
       success: false,
-      action: "stepup",
-      stepup: "2fa",
+      action: "reauth",
       message:
-        "Suspicious activity detected. Please complete two-factor authentication to continue.",
+        "Suspicious activity detected. Please sign in again to verify your identity.",
     };
-    return next();
-  }
 
-  if (riskLevel === "mid") {
-    req.auth.verify = {
-      success: false,
-      action: "approval",
-      stepup: "2fa",
-      message:
-        "We need to confirm it's you. Please approve this session from a trusted device.",
-    };
     return next();
   }
 
   return next();
 };
 
-export const handleStepUpIfNeeded = async (req, res, next) => {
-  const { verify, token, riskLevel, user,deviceInfo , tokenIndex } = req.auth;
+export const handleRefreshReauth = async (req, res, next) => {
+  const { verify } = req.auth;
 
-  if (verify?.success === undefined || verify?.stepup !== "2fa") return next();
+  if (verify?.action !== "reauth") return next();
 
-  if (verify?.action === "stepup") {
-    if (tokenIndex === undefined || tokenIndex === -1) {
-      return removeCookie(res, 401, {
-        message: "Session is no longer valid. Please sign in again.",
-        action: "logout",
-      });
-    }
-
-    const methods = collectOnMethod(user.twoFA.twoFAMethods);
-
-    const data = await setTwoFa(undefined, token, methods);
-
-    user.refreshToken[tokenIndex] = data.info;
-
-    await updateUser(
-      user._id,
-      { refreshToken: user.refreshToken },
-      { id: true },
-    );
-
-    return removeCookie(res, 401, {
-      message: "Two-factor authentication is required to continue.",
-      action: "stepup",
-      stepup: "2fa",
-      allowedMethods: data.response.allowedMethod,
-    });
-  }
-
-  const approval = await getSession(`approval:${req.body.code}`);
-
-  if (!approval) {
-    const { approvalId, timeout } = await sendSessionApproval(deviceInfo, user);
-    return sendResponse(res, 200, {
-      message: "An approval request has been sent to your trusted devices.",
-      action: "await_approval",
-      approvalId,
-      timeout,
-    });
-  }
-
-  if (approval?.status === "pending") {
-    return sendResponse(res, 202, {
-      message: "Waiting for approval from your trusted device.",
-      action: "await_approval",
-    });
-  }
-
-  req.auth.verify = checkSessionApproval(approval, { risk: riskLevel });
-  return next();
+  return removeCookie(res, 401, {
+    message: verify?.message || "Please sign in again to verify your identity.",
+    action: "reauth",
+  });
 };
 
 export const rotateRefreshToken = async (req, res, next) => {
@@ -244,14 +194,18 @@ export const rotateRefreshToken = async (req, res, next) => {
   }
 
   const expiry = setRefreshExpiry(req.body);
+
   const accessToken = getAccessToken(user);
   const refreshToken = getRefreshToken({ _id: user._id }, expiry.jwt);
 
   deviceInfo.token = refreshToken;
   deviceInfo.lastActive = new Date();
+
   user.refreshToken.splice(tokenIndex, 1, tokenBuilder(deviceInfo));
+
   req.auth.refreshToken = refreshToken;
   req.auth.accessToken = accessToken;
   req.auth.refreshMaxAge = expiry.ms;
+
   return next();
 };
