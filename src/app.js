@@ -28,17 +28,18 @@ import {
 
 // others import
 import { getPath } from "./utilities/index.js";
+import * as rateLimiter from "express-rate-limit";
 
 // configure appp
 const app = express();
 startSubscriptionCrons();
 
 const trustProxyConfig = process.env.TRUST_PROXY
-  ? (process.env.TRUST_PROXY === "true"
-      ? true
-      : process.env.TRUST_PROXY === "false"
+  ? process.env.TRUST_PROXY === "true"
+    ? true
+    : process.env.TRUST_PROXY === "false"
       ? false
-      : process.env.TRUST_PROXY)
+      : process.env.TRUST_PROXY
   : "loopback";
 app.set("trust proxy", trustProxyConfig);
 app.set("json spaces", 2);
@@ -54,7 +55,11 @@ app.use(
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", process.env.DOMAIN_LINK],
+    origin: [
+      "http://localhost:3000",
+      "https://benevolent-rabanadas-d70418.netlify.app/",
+      process.env.DOMAIN_LINK,
+    ],
     credentials: true,
   }),
 );
@@ -63,7 +68,6 @@ app.use(helmet());
 app.use(express.static(getPath.publicDir));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(getInfo);
-
 // routes
 
 app.use("/system", systemRouter);
