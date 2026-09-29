@@ -28,7 +28,6 @@ import {
 
 // others import
 import { getPath } from "./utilities/index.js";
-import * as rateLimiter from "express-rate-limit";
 
 // configure appp
 const app = express();

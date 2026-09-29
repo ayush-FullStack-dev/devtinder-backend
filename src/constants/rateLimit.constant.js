@@ -13,7 +13,6 @@ export const BLOCK = {
   SEVERE: 30, // 30 minutes — very strict block for sensitive ops
 };
 
-
 export const AUTH_LIMITS = {
   signup: {
     maxRequests: 10,
@@ -33,13 +32,11 @@ export const AUTH_LIMITS = {
     blockMinutes: BLOCK.SHORT,
   },
 
-
   "login:identify": {
     maxRequests: 20,
     windowMinutes: WINDOW.AUTH,
     blockMinutes: BLOCK.SHORT,
   },
-
 
   "login:confirm": {
     maxRequests: 15,
@@ -62,7 +59,6 @@ export const AUTH_LIMITS = {
     windowMinutes: WINDOW.AUTH,
     blockMinutes: BLOCK.LONG,
   },
-
 
   refresh: {
     maxRequests: 40,
@@ -92,7 +88,6 @@ export const AUTH_LIMITS = {
     blockMinutes: BLOCK.MEDIUM,
   },
 
-
   "account:me": {
     maxRequests: 60,
     windowMinutes: WINDOW.STANDARD,
@@ -110,13 +105,11 @@ export const AUTH_LIMITS = {
     blockMinutes: BLOCK.LONG,
   },
 
-
   "password:forgot": {
     maxRequests: 5,
     windowMinutes: WINDOW.LONG,
     blockMinutes: BLOCK.SEVERE,
   },
-
 
   "password:reset:get": {
     maxRequests: 10,
@@ -128,7 +121,6 @@ export const AUTH_LIMITS = {
     windowMinutes: WINDOW.AUTH,
     blockMinutes: BLOCK.LONG,
   },
-
 
   "mfa:start": {
     maxRequests: 5,
@@ -151,7 +143,6 @@ export const AUTH_LIMITS = {
     windowMinutes: WINDOW.AUTH,
     blockMinutes: BLOCK.LONG,
   },
-
 
   approve_login: {
     maxRequests: 10,
@@ -275,7 +266,6 @@ export const PROFILE_LIMITS = {
   },
 };
 
-
 export const DISCOVER_LIMITS = {
   "discover:base": {
     maxRequests: 60,
@@ -322,7 +312,6 @@ export const MATCH_LIMITS = {
   },
 };
 
-
 export const CHAT_LIMITS = {
   "chat:base": {
     maxRequests: 60,
@@ -330,7 +319,6 @@ export const CHAT_LIMITS = {
     blockMinutes: BLOCK.SHORT,
   },
 };
-
 
 export const CALL_LIMITS = {
   "call:base": {
@@ -400,6 +388,19 @@ export const PUSH_LIMITS = {
   "push:unsubscribe": {
     maxRequests: 20,
     windowMinutes: WINDOW.STANDARD,
+    blockMinutes: BLOCK.SHORT,
+  },
+};
+
+export const SYSTEM_LIMITS = {
+  "system:health": {
+    maxRequests: 300,
+    windowMinutes: WINDOW.SHORT,
+    blockMinutes: BLOCK.SHORT,
+  },
+  "system:ping": {
+    maxRequests: 2000,
+    windowMinutes: WINDOW.SHORT,
     blockMinutes: BLOCK.SHORT,
   },
 };

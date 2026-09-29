@@ -20,6 +20,7 @@
 | 409 | Conflict |
 | 410 | Gone (match/chat closed) |
 | 429 | Rate Limited |
+| 502 | Bad Requste Gateway |
 | 503 | Service Unavailable |
 
 ---
