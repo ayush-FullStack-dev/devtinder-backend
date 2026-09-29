@@ -57,7 +57,6 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://benevolent-rabanadas-d70418.netlify.app/",
       process.env.DOMAIN_LINK,
     ],
     credentials: true,
