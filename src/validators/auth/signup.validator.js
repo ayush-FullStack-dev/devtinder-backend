@@ -54,3 +54,9 @@ const signupValidators = joi.object({
 });
 
 export default signupValidators;
+
+export const verifySignupValidator = joi.object({
+    deviceId: joi.string().length(32).required(),
+    deviceSize: joi.number().greater(170).less(4000).required(),
+    clientTimestamp: joi.date().iso().required(),
+}).required();

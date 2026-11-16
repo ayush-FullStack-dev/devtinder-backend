@@ -1,5 +1,4 @@
-import { buildDeviceInfo } from "../helpers/buildDeviceInfo.js";
-import { getIpDetails } from "../helpers/ip.js";
+import ApiError from "../helpers/ApiError.js";
 import { setRefreshExpiry } from "../helpers/helpers.js";
 import { issueTokens } from "./issueTokens.js";
 import {
@@ -20,8 +19,14 @@ const AUTO_LOGIN_VERIFY = {
 
 
 export const autoLogin = async (req, res, user) => {
-  const ipDetails = await getIpDetails(req.realIp);
-  const deviceInfo = buildDeviceInfo(req.headers["user-agent"], req.body || {}, ipDetails);
+  const deviceInfo = req.auth?.deviceInfo;
+  if (!deviceInfo || deviceInfo.deviceId === "UNKNOWN" || !deviceInfo.deviceId) {
+    throw new ApiError(
+      "BadRequest",
+      "Validated device information is required",
+      400,
+    );
+  }
   const refreshExpiry = setRefreshExpiry({ remember: true });
 
   const userInfo = {

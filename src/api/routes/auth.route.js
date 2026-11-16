@@ -86,7 +86,10 @@ import {
 } from "../../middlewares/auth/reauth.middleware.js";
 
 // importing middleware
-import { signupValidation } from "../../middlewares/auth/signup.middleware.js";
+import {
+  signupValidation,
+  verifySignupValidation,
+} from "../../middlewares/auth/signup.middleware.js";
 import { loginIdentifyValidation } from "../../middlewares/auth/login.middleware.js";
 import { twoFAValidation } from "../../middlewares/auth/twoFA.middleware.js";
 import {
@@ -186,7 +189,7 @@ router.post(
   signupHandler,
 );
 
-router.get(
+router.post(
   "/verify/",
   rateLimiter({
     limit: AUTH_LIMITS["verify"].maxRequests,
@@ -194,7 +197,16 @@ router.get(
     block: AUTH_LIMITS["verify"].blockMinutes,
     route: "verify",
   }),
+  verifySignupValidation,
   verifyEvl,
+);
+
+// Email links open the frontend; only a browser POST may create a session.
+router.get("/verify/", (req, res) =>
+  res.set("Allow", "POST").status(405).json({
+    success: false,
+    message: "Complete email verification from the verification page",
+  }),
 );
 
 router.post(

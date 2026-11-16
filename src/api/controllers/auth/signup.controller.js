@@ -53,7 +53,10 @@ export const verifyEvl = async (req, res) => {
     throw new ApiError("BadRequest", " Token is not found in query", 400);
   }
 
-  if (token.length !== Number(process.env.BYTE) * 2) {
+  if (
+    typeof token !== "string" ||
+    token.length !== Number(process.env.BYTE) * 2
+  ) {
     throw new ApiError("BadRequest", " Token is invalid or corrupted", 400);
   }
 
